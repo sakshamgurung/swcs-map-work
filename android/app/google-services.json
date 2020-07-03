@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "758585368336",
+    "firebase_url": "https://swcs-company.firebaseio.com",
+    "project_id": "swcs-company",
+    "storage_bucket": "swcs-company.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758585368336:android:d8558a3598c16ca35c0f95",
+        "android_client_info": {
+          "package_name": "com.swcs_company"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "758585368336-39463kvpfcohc0p3f59agni7gep2ur6u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvJzPqC8MrSEY-TCpKqkCs1YsEhg_DRJM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "758585368336-39463kvpfcohc0p3f59agni7gep2ur6u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
