@@ -2,17 +2,13 @@ import React, { Component } from 'react'
 import { Text, View, StyleSheet} from 'react-native'
 
 //components
-//import ExploreMap from './ExploreMap'
-import TestMap from './TestMap'
-import TestMap2 from './TestMap2'
-import PolygonScreen from './PolygonScreen'
-
+import ExploreMap from './ExploreMap'
 
 class ExploreScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <TestMap2/>
+        <ExploreMap/>
       </View>
     )
   }

@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Text, View, Button } from 'react-native'
 
 //components
-import {Card} from 'components/card'
+import {Card} from 'lib/components/card'
 
 class AccountScreen extends Component {
   render() {

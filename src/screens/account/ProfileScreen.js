@@ -3,10 +3,10 @@ import React,{ Component } from 'react';
 import { Text, View, TouchableOpacity } from 'react-native';
 
 import {connect} from 'react-redux';
-import {logout} from 'actions';
+import {logout} from 'store/actions';
 //components
-import {Card} from 'components/card';
-import {BackToButton} from 'components/button';
+import {Card} from 'lib/components/card';
+import {BackToButton} from 'lib/components/button';
 
 class ProfileScreen extends Component {
   render() {

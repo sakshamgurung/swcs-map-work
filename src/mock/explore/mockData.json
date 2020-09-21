@@ -1,0 +1,408 @@
+[
+   {
+      "identifier": "1594390683618.0.8168032102181171",
+      "latitude": 28.271639211734655,
+      "longitude": 83.96992357447743,
+      "category": "metal-scraps",
+      "amount": 6
+   },
+   {
+      "identifier": "1594390684826.0.48340886211694123",
+      "latitude": 28.269728722280107,
+      "longitude": 83.96527832373977,
+      "category": "hazard",
+      "amount": 6
+   },
+   {
+      "identifier": "1594390685883.0.7371966225798923",
+      "latitude": 28.265881063815584,
+      "longitude": 83.96198624745011,
+      "category": "bottle",
+      "amount": 5
+   },
+   {
+      "identifier": "1594390686999.0.6183531164068352",
+      "latitude": 28.261249810676738,
+      "longitude": 83.96261120215058,
+      "category": "organic",
+      "amount": 38
+   },
+   {
+      "identifier": "1594390688252.0.39801571254730006",
+      "latitude": 28.261283771372934,
+      "longitude": 83.96894523873925,
+      "category": "bottle",
+      "amount": 39
+   },
+   {
+      "identifier": "1594390689515.0.9466320210509146",
+      "latitude": 28.26544992842441,
+      "longitude": 83.97058138623834,
+      "category": "hazard",
+      "amount": 14
+   },
+   {
+      "identifier": "1594390690782.0.1742965544248768",
+      "latitude": 28.266182562254755,
+      "longitude": 83.97460034117103,
+      "category": "bottle",
+      "amount": 35
+   },
+   {
+      "identifier": "1594390693833.0.6831188355292807",
+      "latitude": 28.26299124216552,
+      "longitude": 83.97514885291457,
+      "category": "hazard",
+      "amount": 20
+   },
+   {
+      "identifier": "1594390694920.0.506247551143706",
+      "latitude": 28.258293416775068,
+      "longitude": 83.9713236875832,
+      "category": "organic",
+      "amount": 33
+   },
+   {
+      "identifier": "1594390696101.0.14512642984956559",
+      "latitude": 28.25327613033918,
+      "longitude": 83.97025382146239,
+      "category": "bottle",
+      "amount": 11
+   },
+   {
+      "identifier": "1594390697069.0.9096156179552146",
+      "latitude": 28.252502356280168,
+      "longitude": 83.9759555272758,
+      "category": "organic",
+      "amount": 11
+   },
+   {
+      "identifier": "1594390698137.0.8461178667069899",
+      "latitude": 28.25783419530132,
+      "longitude": 83.98004287853837,
+      "category": "hazard",
+      "amount": 8
+   },
+   {
+      "identifier": "1594390699419.0.7974261004806785",
+      "latitude": 28.262513141288707,
+      "longitude": 83.98018503561616,
+      "category": "organic",
+      "amount": 21
+   },
+   {
+      "identifier": "1594390700971.0.6771079012087621",
+      "latitude": 28.267031537116033,
+      "longitude": 83.98099070414901,
+      "category": "organic",
+      "amount": 35
+   },
+   {
+      "identifier": "1594390703446.0.9140654774689417",
+      "latitude": 28.268509180185987,
+      "longitude": 83.97812778130174,
+      "category": "hazard",
+      "amount": 20
+   },
+   {
+      "identifier": "1594390704909.0.9932314984238177",
+      "latitude": 28.27231835738248,
+      "longitude": 83.98300303146243,
+      "category": "hazard",
+      "amount": 42
+   },
+   {
+      "identifier": "1594390706105.0.9391186900125326",
+      "latitude": 28.26869550822292,
+      "longitude": 83.98440012708306,
+      "category": "bottle",
+      "amount": 48
+   },
+   {
+      "identifier": "1594390707372.0.6193055066681679",
+      "latitude": 28.260534271057836,
+      "longitude": 83.98586863651872,
+      "category": "organic",
+      "amount": 5
+   },
+   {
+      "identifier": "1594390708506.0.37005185816745334",
+      "latitude": 28.254637309320596,
+      "longitude": 83.9835280738771,
+      "category": "bottle",
+      "amount": 45
+   },
+   {
+      "identifier": "1594390709657.0.8517569708101923",
+      "latitude": 28.24964643165843,
+      "longitude": 83.98131223395465,
+      "category": "organic",
+      "amount": 32
+   },
+   {
+      "identifier": "1594390710608.0.5207641290857392",
+      "latitude": 28.247530280987633,
+      "longitude": 83.98519976064563,
+      "category": "bottle",
+      "amount": 31
+   },
+   {
+      "identifier": "1594390712177.0.4711532331768702",
+      "latitude": 28.25135497486717,
+      "longitude": 83.9879141561687,
+      "category": "hazard",
+      "amount": 37
+   },
+   {
+      "identifier": "1594390713959.0.9378691221346276",
+      "latitude": 28.24950496246285,
+      "longitude": 83.98942759260535,
+      "category": "metal-scraps",
+      "amount": 27
+   },
+   {
+      "identifier": "1594390715859.0.8086241923597176",
+      "latitude": 28.24569172101841,
+      "longitude": 83.98921737447381,
+      "category": "metal-scraps",
+      "amount": 49
+   },
+   {
+      "identifier": "1594390717010.0.07276085747034788",
+      "latitude": 28.247647534259087,
+      "longitude": 83.99391425773501,
+      "category": "organic",
+      "amount": 19
+   },
+   {
+      "identifier": "1594390717996.0.30179566057312",
+      "latitude": 28.24303143846235,
+      "longitude": 83.99260165169835,
+      "category": "hazard",
+      "amount": 49
+   },
+   {
+      "identifier": "1594390719081.0.2506486611230977",
+      "latitude": 28.245321051675397,
+      "longitude": 83.99656595662236,
+      "category": "hazard",
+      "amount": 15
+   },
+   {
+      "identifier": "1594390719986.0.45583403393715105",
+      "latitude": 28.238801490977636,
+      "longitude": 83.99434072896838,
+      "category": "metal-scraps",
+      "amount": 37
+   },
+   {
+      "identifier": "1594390720979.0.019991218484728956",
+      "latitude": 28.235211767086604,
+      "longitude": 83.99417946115136,
+      "category": "metal-scraps",
+      "amount": 17
+   },
+   {
+      "identifier": "1594390721865.0.5582114101925574",
+      "latitude": 28.23092508923819,
+      "longitude": 83.99233711883426,
+      "category": "hazard",
+      "amount": 18
+   },
+   {
+      "identifier": "1594390724363.0.04487739887842612",
+      "latitude": 28.229828579485783,
+      "longitude": 83.98840902373193,
+      "category": "metal-scraps",
+      "amount": 16
+   },
+   {
+      "identifier": "1594390725337.0.907654945947117",
+      "latitude": 28.231290491520895,
+      "longitude": 83.98513169959188,
+      "category": "metal-scraps",
+      "amount": 26
+   },
+   {
+      "identifier": "1594390726149.0.355503410127754",
+      "latitude": 28.235910344559677,
+      "longitude": 83.98635780438781,
+      "category": "organic",
+      "amount": 15
+   },
+   {
+      "identifier": "1594390727017.0.09118484271454863",
+      "latitude": 28.23915623290933,
+      "longitude": 83.98793360218406,
+      "category": "bottle",
+      "amount": 14
+   },
+   {
+      "identifier": "1594390729401.0.47991173042438195",
+      "latitude": 28.238492235392016,
+      "longitude": 83.98210851475596,
+      "category": "bottle",
+      "amount": 12
+   },
+   {
+      "identifier": "1594390730599.0.5537795328482814",
+      "latitude": 28.23575320194965,
+      "longitude": 83.9811690710485,
+      "category": "metal-scraps",
+      "amount": 14
+   },
+   {
+      "identifier": "1594390731584.0.7036156422613608",
+      "latitude": 28.23120541818284,
+      "longitude": 83.98319648578763,
+      "category": "bottle",
+      "amount": 41
+   },
+   {
+      "identifier": "1594390732417.0.5260842192600396",
+      "latitude": 28.223870541745644,
+      "longitude": 83.98206057026982,
+      "category": "hazard",
+      "amount": 37
+   },
+   {
+      "identifier": "1594390734635.0.07256135814382247",
+      "latitude": 28.219889764505368,
+      "longitude": 83.98293094709516,
+      "category": "bottle",
+      "amount": 41
+   },
+   {
+      "identifier": "1594390735419.0.31213113197449394",
+      "latitude": 28.21956006973101,
+      "longitude": 83.98591959849,
+      "category": "organic",
+      "amount": 35
+   },
+   {
+      "identifier": "1594390736186.0.9734750283335439",
+      "latitude": 28.220303063236948,
+      "longitude": 83.990084733814,
+      "category": "hazard",
+      "amount": 25
+   },
+   {
+      "identifier": "1594390738135.0.8241047131232769",
+      "latitude": 28.2259588025559,
+      "longitude": 83.99107681587338,
+      "category": "hazard",
+      "amount": 31
+   },
+   {
+      "identifier": "1594390739106.0.7680083490696109",
+      "latitude": 28.225993365306685,
+      "longitude": 83.99485470727086,
+      "category": "organic",
+      "amount": 5
+   },
+   {
+      "identifier": "1594390740104.0.08689559937747804",
+      "latitude": 28.21885902181343,
+      "longitude": 83.9946592412889,
+      "category": "metal-scraps",
+      "amount": 35
+   },
+   {
+      "identifier": "1594390741910.0.41379848020942456",
+      "latitude": 28.216793209342512,
+      "longitude": 83.98728098720312,
+      "category": "organic",
+      "amount": 35
+   },
+   {
+      "identifier": "1594390742438.0.4091937841867488",
+      "latitude": 28.216793209342512,
+      "longitude": 83.98728098720312,
+      "category": "hazard",
+      "amount": 20
+   },
+   {
+      "identifier": "1594390744692.0.9520137513030116",
+      "latitude": 28.21421079399604,
+      "longitude": 83.97700041532516,
+      "category": "organic",
+      "amount": 13
+   },
+   {
+      "identifier": "1594390746005.0.7927622676372899",
+      "latitude": 28.21954129628679,
+      "longitude": 83.97521808743477,
+      "category": "bottle",
+      "amount": 13
+   },
+   {
+      "identifier": "1594390746941.0.49477145141270207",
+      "latitude": 28.21398300902524,
+      "longitude": 83.96973565220833,
+      "category": "organic",
+      "amount": 22
+   },
+   {
+      "identifier": "1594390747805.0.01673324497278461",
+      "latitude": 28.20792481411121,
+      "longitude": 83.9744720980525,
+      "category": "organic",
+      "amount": 50
+   },
+   {
+      "identifier": "1594390748639.0.7663192574971531",
+      "latitude": 28.207130619998132,
+      "longitude": 83.9883803576231,
+      "category": "metal-scraps",
+      "amount": 43
+   },
+   {
+      "identifier": "1594390749490.0.11998513450967219",
+      "latitude": 28.20646287781903,
+      "longitude": 83.99613797664642,
+      "category": "bottle",
+      "amount": 46
+   },
+   {
+      "identifier": "1594390751557.0.8658018634627701",
+      "latitude": 28.213195064270142,
+      "longitude": 83.99968687444925,
+      "category": "metal-scraps",
+      "amount": 26
+   },
+   {
+      "identifier": "1594390752707.0.9872424522787403",
+      "latitude": 28.199109164881214,
+      "longitude": 83.99966575205326,
+      "category": "organic",
+      "amount": 39
+   },
+   {
+      "identifier": "1594390753791.0.5603694816111789",
+      "latitude": 28.197988394256797,
+      "longitude": 83.98798640817404,
+      "category": "organic",
+      "amount": 50
+   },
+   {
+      "identifier": "1594390755744.0.36536322918906217",
+      "latitude": 28.201186385970537,
+      "longitude": 83.97491801530123,
+      "category": "hazard",
+      "amount": 36
+   },
+   {
+      "identifier": "1594390757329.0.9681805920142047",
+      "latitude": 28.205484598443796,
+      "longitude": 83.97084977477789,
+      "category": "organic",
+      "amount": 8
+   },
+   {
+      "identifier": "1594390758698.0.5078110989014032",
+      "latitude": 28.208532569531705,
+      "longitude": 83.96535895764828,
+      "category": "bottle",
+      "amount": 34
+   }
+]

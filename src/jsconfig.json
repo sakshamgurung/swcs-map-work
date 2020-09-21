@@ -2,13 +2,16 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths":{
-      "action/*":["./actions/*"],
-      "assets/*":["./assets/*"],
-      "components/*":["./components/*"],
-      "reducers/*":["./reducers/*"],
-      "res/*":["./res/*"],
+      "lib/*":["./lib/*"],
+      "assets/*":["./lib/assets/*"],
+      "components/*":["./lib/components/*"],
+      "res/*":["./lib/res/*"],
+      "utilities/*":["./lib/utilities/*"],
+      "store/*":["./store/*"],
+      "actions/*":["./store/actions/*"],
+      "reducers/*":["./store/reducers/*"],
+      "mock/*":["./mock/*"],
       "screens/*":["./screens/*"],
-      "utilities/*":["./utilities/*"]
     }
   }
 }

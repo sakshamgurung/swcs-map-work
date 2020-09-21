@@ -11,8 +11,8 @@ import MapView, { PROVIDER_GOOGLE, Polygon, AnimatedRegion, Marker } from 'react
 import type { Region } from 'react-native-maps';
 
 /** Utilities */
-import { FACEBOOK, GOOGLE_PLEX, APPLE } from 'utilities';
-import {getRegionFromMarkers, grahamScan} from 'utilities';
+import { FACEBOOK, GOOGLE_PLEX, APPLE } from 'lib/utilities';
+import {getRegionFromMarkers, grahamScan} from 'lib/utilities';
 
 class Point {
   constructor(c, identifier) {

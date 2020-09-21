@@ -4,11 +4,11 @@ import messaging from '@react-native-firebase/messaging'
 import AsyncStorage from '@react-native-community/async-storage'
 
 import {connect} from 'react-redux'
-import {postChanged, posting} from 'actions'
+import {postChanged, posting} from 'store/actions'
 //components
-import {Statistic} from 'components/card'
-import {Input} from 'components/input'
-import {SubmitButton} from 'components/button';
+import {Statistic} from 'lib/components/card'
+import {Input} from 'lib/components/input'
+import {SubmitButton} from 'lib/components/button';
 
 class DashboardScreen extends Component {
   componentDidMount(){

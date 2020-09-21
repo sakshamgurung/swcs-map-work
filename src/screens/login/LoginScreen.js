@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 import { Text, View, ActivityIndicator } from 'react-native';
 
 import {connect} from 'react-redux';
-import {emailChanged, passwordChanged, resetState, login} from 'actions'
+import {emailChanged, passwordChanged, resetState, login} from 'store/actions'
 //components
-import {Card} from 'components/card';
-import {Input} from 'components/input';
-import {SubmitButton} from 'components/button';
+import {Card} from 'lib/components/card';
+import {Input} from 'lib/components/input';
+import {SubmitButton} from 'lib/components/button';
 
 class LoginScreen extends Component {
   componentWillUnmount(){

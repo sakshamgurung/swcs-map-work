@@ -1,3 +1,16 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "files.exclude": {
+    "**/.buckconfig": true,
+    "**/.eslintrc.js": true,
+    "**/.flowconfig": true,
+    "**/.gitattributes": true,
+    "**/.idea": true,
+    "**/.prettierrc.js": true,
+    "**/.vscode": true,
+    "**/.watchmanconfig": true,
+    "**/babel.config.js": true,
+    "**/ios": true,
+    "**/metro.config.js": true
+  }
 }
