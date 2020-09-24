@@ -54,6 +54,7 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear,
   return (
     <Modal
       visible = {true}
+      //hardware backbutton callback
       onRequestClose = {onRequestClose}
     >
       <View style = {styles.searchModal}>

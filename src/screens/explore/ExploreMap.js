@@ -2,6 +2,9 @@
  * @flow
  */
 import React, { Component} from 'react';
+import {connect} from 'react-redux';
+//action creator
+import {actions as exploreActions} from '../../ducks/explore';
 import { Dimensions,StyleSheet, View, Text, PermissionsAndroid, Platform, 
   Alert, TextInput, ScrollView, Keyboard } from 'react-native';
 /* Other dependencies */
@@ -52,7 +55,7 @@ class Point {
 
 const window = Dimensions.get("window");
 const screen = Dimensions.get("screen");
-export default class ExploreMap extends Component {
+class ExploreMap extends Component {
   _currentRegion:AnimatedRegion;
   constructor() {
     super();
@@ -275,11 +278,10 @@ export default class ExploreMap extends Component {
     }
   }
   _onMapPress = (e) => {
-    this.setState({selectedTrackIndex:-1, currentMarkerID:""});
-    this.setState({selectedZoneIndex:-1});
+    this.setState({selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:""});
   }
   // Zone panel button handlers
-  _onPressAddZone = () => {
+  _toggleZonePanel = () => {
     this.setState({showDefaultPanel:false, mapSearchVisible:false, 
       selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:"",showZonePanel:true});
   }
@@ -306,12 +308,13 @@ export default class ExploreMap extends Component {
         removeIndex = index;
       }
     });
+    //call action creator
     const zonePoints = _.cloneDeep(this.state.zonePoints);
     zonePoints.splice(removeIndex,1);
     this.setState({zonePoints});
   }
   // Track panel button handlers
-  _onPressAddTrack =()=> {
+  _toggleTrackPanel =()=> {
     this.setState({showDefaultPanel:false, mapSearchVisible:false, 
       selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:"", showTrackPanel:true});
   }
@@ -349,6 +352,7 @@ export default class ExploreMap extends Component {
         removeIndex = index;
       }
     });
+    //call actioncreator
     const trackPoints = _.cloneDeep(this.state.trackPoints);
     trackPoints.splice(removeIndex,1);
     this.setState({trackPoints});
@@ -467,6 +471,7 @@ export default class ExploreMap extends Component {
   _renderDummySearchBox = () => {
     if(this.state.mapSearchVisible){
       return(
+        //toggle searchBox
         <DummySearchBox
           onPress = {()=>this.setState({mapSearchFocused:true, mapSearchVisible:false})}
           rightIcon = {
@@ -551,8 +556,8 @@ export default class ExploreMap extends Component {
       return(
         <View style={styles.defaultPanelStyle}>
           <FAB style={styles.FABStyle}
-            option1 = {<Button text="Add zone" buttonType="contained" onPress={this._onPressAddZone}/>}
-            option2 = {<Button text="Add track" buttonType="contained" onPress={this._onPressAddTrack}/>}
+            option1 = {<Button text="Add zone" buttonType="contained" onPress={this._toggleZonePanel}/>}
+            option2 = {<Button text="Add track" buttonType="contained" onPress={this._toggleTrackPanel}/>}
           />
         </View>
       )
@@ -629,9 +634,11 @@ export default class ExploreMap extends Component {
       return(
         <SearchModal
           autoFocus = {true}
+          //toggleSearchBox
           onRequestClose = {()=> this.setState({mapSearchFocused:false, mapSearchVisible:true})}
           onChangeText = {text => this.handleSearchQuery(text)}
           value = {this.state.searchQuery}
+          //toggleSearchBox
           onPressBack = {()=> this.setState({mapSearchFocused:false, mapSearchVisible:true})}
           onPressClear = {()=>this.setState({searchQuery:""})}
           trackData = {this.state.queryTrack}
@@ -648,6 +655,7 @@ export default class ExploreMap extends Component {
       return(
         <CustomModal 
           visible = {this.state.nameModalVisible}
+          //toggleNameModal
           onRequestClose = {() => this.setState({nameModalVisible:false})}
           onPressTouchableOpacity = {() => this.setState({nameModalVisible:false})}
           title = "Track Name"
@@ -755,3 +763,67 @@ const styles = StyleSheet.create({
     top:"48.6%"
   },
 });
+
+const mapStateToProps = (state) => {
+  const {
+    categories,
+    region,
+    errorInfo,
+    hasMapPermission,
+    mapSearchVisible,
+    mapSearchFocused,
+    searchQuery,
+    showDefaultPanel,
+    showZonePanel,
+    showTrackPanel1,
+    showTrackPanel2,
+    nameModalVisible,
+    nameModalValue,
+    zone,
+    zonePoints,
+    queryZone,
+    fullQueryZone,
+    track,
+    trackPoints,
+    trackCheckpoints,
+    interval,
+    queryTrack,
+    fullQueryTrack,
+    currentMarkerId,
+    selectedTrackIndex,
+    selectedZoneIndex,
+    trackWasteData} = state.explore;
+    return {
+      categories,
+      region,
+      errorInfo,
+      hasMapPermission,
+      mapSearchVisible,
+      mapSearchFocused,
+      searchQuery,
+      showDefaultPanel,
+      showZonePanel,
+      showTrackPanel1,
+      showTrackPanel2,
+      nameModalVisible,
+      nameModalValue,
+      zone,
+      zonePoints,
+      queryZone,
+      fullQueryZone,
+      track,
+      trackPoints,
+      trackCheckpoints,
+      interval,
+      queryTrack,
+      fullQueryTrack,
+      currentMarkerId,
+      selectedTrackIndex,
+      selectedZoneIndex,
+      trackWasteData
+    }
+}
+
+export default connect (mapStateToProps, {
+  exploreActions
+})(ExploreMap)
