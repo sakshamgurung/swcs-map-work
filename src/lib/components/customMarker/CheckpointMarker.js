@@ -2,7 +2,8 @@ import React, {Component, useState} from 'react'
 import {Marker} from 'react-native-maps'
 
 let _ = require("lodash");
-
+const checkpointMarker = require("assets/images/delete-icon-outline-15.png");
+const checkpointMarkerHighlight = require("assets/images/delete-icon-outline-highlight.png");
 class CheckpointMarker extends Component{
   constructor(){
     super();
@@ -27,17 +28,27 @@ class CheckpointMarker extends Component{
   stopRendering = () => {
     this.setState({tracksViewChange:false});
   }
-  
   render(){
-    const {coordinate, onPress} = this.props;
-    return (
-      <Marker
-      coordinate = {coordinate}
-      onPress = {onPress}
-      image = {require("assets/images/delete-icon-outline-15.png")}
-      tracksViewChange={this.state.tracksViewChange}
-      />
-    )
+    const {coordinate, id, onPress, markerType="default"} = this.props;
+    if(markerType == "default"){
+      return (
+        <Marker
+        coordinate = {coordinate}
+        onPress = {(e) => onPress(e, id, coordinate)}
+        image = {checkpointMarker}
+        tracksViewChange={this.state.tracksViewChange}
+        />
+      )
+    }else if(markerType == "highlight"){
+      return (
+        <Marker
+        coordinate = {coordinate}
+        onPress = {onPress}
+        image = {checkpointMarkerHighlight}
+        tracksViewChange={this.state.tracksViewChange}
+        />
+      )
+    }
   } 
 }
 

@@ -4,20 +4,21 @@ import { View, Text, StyleSheet, TextInput, TouchableWithoutFeedback } from 'rea
 import {shadow} from 'lib/res'
 
 const MapSearch = ({style, visible, placeholder, onFocus, onChangeText, value , 
-  autoFocus, leftIcon, rightIcon}) => {
+  autoFocus, leftIcon, rightIcon, editable}) => {
   if(visible){
     return (
       <View style={[styles.searchBox, style]}>
         <View style={{paddingRight:5}}>{leftIcon ? leftIcon: null}</View>
         <TextInput
-          placeholder = {placeholder || "Search here"}
+          placeholder = {placeholder || "Search here ..."}
           placeholderTextColor = "#000"
           autoCapitalize = "none"
-          autoFocus = {autoFocus || false}
+          autoFocus = {autoFocus}
           onFocus = {onFocus}
           style = {styles.textInput}
           value = {value}
           onChangeText = {onChangeText}
+          editable = {editable}
         />
         <View>{rightIcon ? rightIcon: null}</View>
       </View>
@@ -56,7 +57,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex:1,
-    padding:0
+    padding:0,
+    color:"rgba(0, 0, 0, 1)"
   }
 });
 

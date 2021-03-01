@@ -21,12 +21,12 @@ const MainBottomTab = createBottomTabNavigator();
 
 const MainBottomTabNavigator = () => (
   <MainBottomTab.Navigator>
+    <MainBottomTab.Screen name="Work" component={DashboardNavigator}/>
     <MainBottomTab.Screen name="Explore" component={ExploreNavigator}/>
-    <MainBottomTab.Screen name="DashBoard" component={DashboardNavigator}/>
-    {/* <MainBottomTab.Screen name="Account" component={AccountNavigator}/> */}
+    {/* <MainBottomTab.Screen name="Account" component={AccountNavigator}/> 
     <MainBottomTab.Screen name="Post" component={PostNavigator}/>
     <MainBottomTab.Screen name="Customer" component={CustomerNavigator}/>
-    <MainBottomTab.Screen name="Inbox" component={InboxNavigator}/>
+    <MainBottomTab.Screen name="Inbox" component={InboxNavigator}/> */}
   </MainBottomTab.Navigator>
 )
 
@@ -34,15 +34,16 @@ class Router extends Component{
   render(){
     return(
       <NavigationContainer>
-        <SwitchStack.Navigator headerMode="none">
+        {/* <SwitchStack.Navigator headerMode="none"> */}
           {/* {
             this.props.loggedIn == false ?(
             <SwitchStack.Screen name="Login" component={LoginNavigator}/>
             ):(<SwitchStack.Screen name="Main" component={MainBottomTabNavigator}/>)
           } */}
           {/* <SwitchStack.Screen name="Main" component={MainBottomTabNavigator}/> */}
-          <SwitchStack.Screen name="Main" component={ExploreNavigator}/>
-        </SwitchStack.Navigator>
+          {/* <SwitchStack.Screen name="Main" component={ExploreNavigator}/> */}
+        {/* </SwitchStack.Navigator> */}
+        {MainBottomTabNavigator()}
       </NavigationContainer>
     )
   }

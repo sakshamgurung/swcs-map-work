@@ -1,14 +1,14 @@
-import React from 'react'
+import React, {Component} from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import {shadow, colors} from 'lib/res'
 
-import {shadow} from 'lib/res'
-
-const Chips = ({name, onPress}) => {
+const Chips = ({name, onPress, id, type, query, selectedChipsId}) => {
   return (
-    <TouchableOpacity style={styles.chipsItem} onPress={onPress}>
-      <Text>{name}</Text>
+    <TouchableOpacity  style={[styles.chipsItem, selectedChipsId==id?styles.chipsItemSelected:styles.chipsItemInactive]} 
+    onPress={() => onPress(type, query, id)}>
+      <Text style={[selectedChipsId==id?styles.chipsItemSelectedText:styles.chipsItemInactiveText]}>{name}</Text>
     </TouchableOpacity>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -17,13 +17,24 @@ const styles = StyleSheet.create({
   },
   chipsItem: {
     flexDirection:"row",
-    backgroundColor:'#fff', 
     borderRadius:20,
     padding:8,
     paddingHorizontal:15, 
     marginHorizontal:5,
     height:35,
     ...shadow.DP8
+  },
+  chipsItemInactive:{
+    backgroundColor:"#fff",
+  },
+  chipsItemSelected:{
+    backgroundColor:colors.primaryButton,
+  },
+  chipsItemInactiveText:{
+    color:"#000"
+  },
+  chipsItemSelectedText:{
+    color:colors.buttonText
   }
 });
 

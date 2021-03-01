@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet,
-  TouchableOpacity, TouchableWithoutFeedback, Modal, ScrollView} from 'react-native'
+  TouchableOpacity, TouchableWithoutFeedback, Modal, ScrollView, Keyboard} from 'react-native'
 import shadow from 'lib/res/shadow'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 // component
@@ -35,9 +35,11 @@ export const CustomModal = (props) => {
   )
 }
 
-const ListItem = ({onPressItem, icon, distance, title, desc}) => {
+const ListItem = ({onPressItem, icon, distance, title, desc, id}) => {
   return(
-    <TouchableOpacity style={{borderBottomWidth:1, borderBottomColor:"rgbs(0,0,0,0.3)", flexDirection:"row"}}>
+    <TouchableOpacity 
+    onPress = {(e) => onPressItem(e, id, "list")}
+    style={{borderBottomWidth:2, borderBottomColor:"rgba(204, 204, 204, 1)",flexDirection:"row"}}>
       <View style = {{alignContent:"center", marginHorizontal:10, marginVertical:5 }}>
         <View style = {{paddingTop:5}}>{icon}</View>
         <Text style={{fontSize:14}}>{distance}</Text>
@@ -49,9 +51,9 @@ const ListItem = ({onPressItem, icon, distance, title, desc}) => {
     </TouchableOpacity>
   )
 }
-export const SearchModal = ({onRequestClose, onPressBack, onPressClear, 
-  onChangeText, value, trackData, zoneData, autoFocus}) => {
-  return (
+export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressTrack, 
+  onPressZone, onChangeText, value, trackData, zoneData}) => {
+    return (
     <Modal
       visible = {true}
       //hardware backbutton callback
@@ -62,7 +64,7 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear,
           <MapSearch 
             style = {{position:"relative"}}
             visible = {true}
-            autoFocus = {autoFocus}
+            autoFocus = {true}
             onChangeText = {onChangeText}
             value = {value}
             leftIcon = {
@@ -74,27 +76,32 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear,
           />
         </View>
         <View style = {styles.searchModalContainer}>
-          <ScrollView style = {styles.listContent}>
-            {trackData.map((td)=>
-              <ListItem
-                key = {td.trackID}
-                icon = {<MaterialIcon name="vector-polyline" size={20} color="rgba(247, 72, 72,1)"/>}
-                distance = {null}
-                title = {td.trackName}
-                desc = {td.trackName}
-              />
-            )}
-            {zoneData.map((zd)=>
-              <ListItem
-                key = {zd.zoneID}
-                icon = {<MaterialIcon name="vector-polygon" size={20} color="rgba(72, 162, 247,1)"/>}
-                distance = {null}
-                title = {zd.zoneName}
-                desc = {zd.zoneName}
-              />
-            )
-            }
-          </ScrollView>
+          {/* <TouchableWithoutFeedback accessible = {false} onPress={Keyboard.dismiss}> */}
+            <ScrollView style = {styles.listContent} onScrollBeginDrag={Keyboard.dismiss}>
+              {trackData.map((td)=>
+                <ListItem
+                  key = {td.trackId}
+                  id = {td.trackId}
+                  icon = {<MaterialIcon name="vector-polyline" size={20} color="rgba(247, 72, 72,1)"/>}
+                  distance = {null}
+                  title = {td.trackName}
+                  desc = {td.trackName}
+                  onPressItem = {onPressTrack}
+                />
+              )}
+              {zoneData.map((zd)=>
+                <ListItem
+                  key = {zd.zoneId}
+                  id = {zd.zoneId}
+                  icon = {<MaterialIcon name="vector-polygon" size={20} color="rgba(72, 162, 247,1)"/>}
+                  distance = {null}
+                  title = {zd.zoneName}
+                  desc = {zd.zoneName}
+                  onPressItem = {onPressZone}
+                />
+              )}
+            </ScrollView>
+          {/* </TouchableWithoutFeedback> */}
         </View>
       </View>
     </Modal>
@@ -142,12 +149,13 @@ const styles = StyleSheet.create({
     marginHorizontal:0,
   },
   searchHeader:{
-    marginBottom: 20
+    marginBottom:0,
   },
   searchModalContainer:{
     backgroundColor:"#fff",
     flex:1,
     marginHorizontal:5,
+    marginTop:10,
     ...shadow.DP24
   },
   listContent:{

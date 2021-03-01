@@ -7,6 +7,7 @@
       "components/*":["./lib/components/*"],
       "res/*":["./lib/res/*"],
       "utilities/*":["./lib/utilities/*"],
+      "ducks/*":["./ducks/*"],
       "store/*":["./store/*"],
       "actions/*":["./store/actions/*"],
       "reducers/*":["./store/reducers/*"],

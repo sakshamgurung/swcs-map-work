@@ -1,33 +1,35 @@
 import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, Pressable } from 'react-native'
 import {colors,shadow} from 'lib/res'
 
-const Button = ({buttonType, text, children, icon, onPress, style}) => {
+const Button = ({buttonType, text, children, icon, onPress, disabled, style, buttonContainStyle, childrenStyle}) => {
   const styles = StyleSheet.create({
     containedStyle:{
-      flexDirection:"row",
-      backgroundColor:colors.button,
+      //flexDirection:"row",
+      justifyContent:"center",
+      alignItems:"center",
+      backgroundColor:colors.primaryButton,
+      // width:110,
+      // height:30,
       borderRadius:4,
       alignSelf:"baseline",
       ...shadow.DP2
     },
     outlineStyle:{
       borderWidth:1,
-      borderColor:colors.button,
+      borderColor:colors.primaryButton,
       borderRadius:4,
       alignSelf:"baseline",
     },
     textStyle:{
-      fontSize:16,
+      fontSize:15,
       fontFamily:"Roboto",
       fontWeight:"normal",
-      color:buttonType === "outline"? colors.button:colors.buttonText,
+      color:buttonType === "outline"? colors.primaryButton:colors.buttonText,
       padding:5,
-      paddingLeft:children?8:16,
-      paddingRight:16,
     },
     icon_round_style:{
-      backgroundColor:colors.button,
+      backgroundColor:colors.primaryButton,
       alignSelf:"baseline",
       borderRadius:50,
       ...shadow.DP6
@@ -35,39 +37,41 @@ const Button = ({buttonType, text, children, icon, onPress, style}) => {
   });
   if(buttonType === "outline"){
     return(
-      <View style={style}>
-        <TouchableOpacity style={styles.outlineStyle} onPress={onPress}>
-          <Text style={styles.textStyle}>{text}</Text>
-        </TouchableOpacity>
-      </View>
+      <Pressable disabled={disabled} onPress={onPress}>
+        <View style={[styles.outlineStyle, style]}>
+          <Text style={[styles.textStyle, buttonContainStyle]}>{text}</Text>
+        </View>
+      </Pressable>
     )
   }
   if(buttonType === "iconOnly"){
     return(
-      <View>
-        <TouchableOpacity onPress={onPress}>
+      <Pressable disabled={disabled} onPress={onPress}>
+        <View style={[style]}>
           {icon}
-        </TouchableOpacity>
-      </View>
+        </View>
+      </Pressable>
     )
   }
   //default buttonType "contained"
   if(children){
     return(
-      <View style={style}>
-        <TouchableOpacity style={styles.containedStyle} onPress={onPress}>
-          {children}
-          <Text style={styles.textStyle}>{text}</Text>
-        </TouchableOpacity>
-      </View>
+      <Pressable disabled={disabled} onPress={onPress}>
+        <View style={[styles.containedStyle, style]}>
+          <View style={[childrenStyle]}>
+            {children}
+          </View>
+          <Text style={[styles.textStyle, buttonContainStyle]}>{text}</Text>
+        </View>
+      </Pressable>
     )
   }else{
     return(
-      <View style={style}>
-        <TouchableOpacity style={styles.containedStyle} onPress={onPress}>
-          <Text style={styles.textStyle}>{text}</Text>
-        </TouchableOpacity>
-      </View>
+      <Pressable disabled={disabled} onPress={onPress}>
+        <View  style={[styles.containedStyle, style]}>
+          <Text style={[styles.textStyle, buttonContainStyle]}>{text}</Text>
+        </View>
+      </Pressable>
     )
   }
 }//end Button function

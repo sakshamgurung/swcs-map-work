@@ -1,0 +1,62 @@
+[
+  {
+    "id":"w1",
+    "companyId":"100",
+    "createdBy":"company",
+    "startDate":"2020:10:01",
+    "endDate":"2020:10:03",
+    "startTime":"10:00",
+    "endTime":"16:00",
+    "collectorId":"1000",
+    "vehicleId":"v1",
+    "geoObjectTrackId":["1594548245601.0.14285883746076822"],
+    "geoObjectZoneId":["1594548382619.0.9605677833457704"],
+    "workDescription":"Work description...",
+    "workStatus":"assigned"
+  },
+  {
+    "id":"w2",
+    "companyId":"100",
+    "createdBy":"company",
+    "startDate":"2020:10:04",
+    "endDate":"2020:10:05",
+    "startTime":"10:00",
+    "endTime":"16:00",
+    "collectorId":"1001",
+    "vehicleId":"v2",
+    "geoObjectTrackId":["1594548299639.0.22278581558056487"],
+    "geoObjectZoneId":["1594548407730.0.0666919222900284", "1594548524956.0.7218817627483546"],
+    "workDescription":"Work description...",
+    "workStatus":"on progress"
+  },
+  {
+    "id":"w3",
+    "companyId":"100",
+    "createdBy":"company",
+    "startDate":"2020:10:04",
+    "endDate":"2020:10:05",
+    "startTime":"10:00",
+    "endTime":"16:00",
+    "collectorId":"1002",
+    "vehicleId":"v3",
+    "geoObjectTrackId":[],
+    "geoObjectZoneId":["1594548429705.0.06354204151296305"],
+    "workDescription":"Work description...",
+    "workStatus":"unconfirmed"
+  },
+  {
+    "id":"w4",
+    "companyId":"100",
+    "createdBy":"company",
+    "startDate":"2020:10:04",
+    "endDate":"2020:10:05",
+    "startTime":"10:00",
+    "endTime":"16:00",
+    "collectorId":"1003",
+    "vehicleId":"v4",
+    "geoObjectTrackId":[],
+    "geoObjectZoneId":["1594548475540.0.03947406740512083"],
+    "workDescription":"Work description...",
+    "workStatus":"finished"
+  }
+]

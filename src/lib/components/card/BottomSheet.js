@@ -1,7 +1,10 @@
 import React from 'react'
 import { View, Text, StyleSheet, ScrollView,
   TouchableOpacity} from 'react-native'
+import _ from 'lodash';
+import LinearGradient from 'react-native-linear-gradient'
 import shadow from 'lib/res/shadow'
+import colors from 'res/colors'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ListItem = ({onPressItem, icon, distance, title, desc}) => {
@@ -37,13 +40,73 @@ export const BottomSheetList = ({data}) => {
     </View>
   )
 }
-const WasteAmountItem = ({amount, category}) => {
+
+const StatusChips = ({status}) => {
   return(
-    <View style={{borderWidth:2, paddingHorizontal:10, marginHorizontal:5, height:60}}>
-      <View><Text style={{fontFamily:"Roboto",fontSize:20, textAlign:"center"}}>
+    <View style={[styles.chipsItem, getBGColor(status)]}>
+      <Text style={styles.chipsText}>{status}</Text>
+    </View>
+  )
+}
+const Header = ({title, wasteCondition, workData, onPressSeeDetail}) => {
+  let workStatus, collectorName, plateNumber;
+  if(_.isEmpty(workData)){
+    workStatus = "no work";
+    collectorName = "no collector";
+    plateNumber = "no vehicle";
+  }else{
+    workStatus = workData.workStatus;
+    if(_.isEmpty(workData.collectorSummary)){
+      collectorName = "no collector";
+    }else{
+      collectorName = workData.collectorSummary.collectorName;
+    }
+    if(_.isEmpty(workData.vehicleSummary)){
+      plateNumber = "no vehicle";
+    }else{
+      plateNumber = workData.vehicleSummary.plateNumber;
+    }
+  }
+  return(
+    <View style = {styles.infoHeader}>
+      <View style={styles.headerTitleContainer}>
+        <Text style={styles.headerTitle}>{title.length > 30 ? `${title.slice(0,27)}...` : title}</Text>
+        <TouchableOpacity onPress = {onPressSeeDetail}>
+          <Text style={styles.headerSecondaryTitle}>See Detail</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.chipsContainer}>
+        <View style={styles.chipsContainerItem}>
+          <Text style={styles.chipsTitle}>Work</Text>
+          <StatusChips status = {workStatus}/>
+        </View>
+        <View style={styles.chipsContainerItem}>
+          <Text style={styles.chipsTitle}>Waste</Text>
+          <StatusChips status = {_.isEmpty(wasteCondition)? "no waste":wasteCondition}/>
+        </View>
+      </View>
+      <View style={styles.chipsContainer}>
+        <View style={styles.chipsContainerItem}>
+          <Text style={styles.chipsTitle}>Collector</Text>
+          <StatusChips status = {collectorName}/>
+        </View>
+        <View style={styles.chipsContainerItem}>
+          <Text style={styles.chipsTitle}>Vehicle</Text>
+          <StatusChips status = {plateNumber}/>
+        </View>
+      </View>
+    </View>
+  )
+}
+const WasteCategoryItem = ({amount, category}) => {
+  return(
+    <View style={styles.wasteCategoryItemContainer}>
+      <View>
+        <Text style={{fontFamily:"Roboto",fontSize:20, textAlign:"center"}}>
           {amount}
         </Text>
       </View>
+      <Divider/>
       <View>
         <Text style={{fontFamily:"Roboto",fontSize:14, textAlign:"center"}}>
           {category}
@@ -52,18 +115,24 @@ const WasteAmountItem = ({amount, category}) => {
     </View>
   )
 }
-
-export const BottomSheetInfo = ({title, data, dataPresent}) => {
-  if(dataPresent == true){
-    return (
-      <View style = {styles.infoEdit}>
-        <View style = {styles.infoEditContainer}>
-          <View style = {styles.infoHeader}>
-            <View><Text style={{fontFamily:"Roboto",fontSize:14}}>{title}</Text></View>
-            <View style={{flexDirection:"row"}}>
-              <View><Text style={{fontFamily:"Roboto",fontSize:14}}>WasteStatus</Text></View>
-              <View><Text style={{fontFamily:"Roboto",fontSize:14}}>WorkStatus</Text></View>
-            </View>
+const Divider = () => {
+  return (
+   <View style={{borderTopWidth:2, borderTopColor:"rgba(204, 204, 204, 1)", marginHorizontal:10}}></View> 
+  )
+}
+export const BottomSheetInfo = ({title, wasteCondition, workId, workData, wasteData}) => {
+  return (
+    <View style = {styles.infoEdit}>
+      <LinearGradient colors={["rgba(236, 233, 230, 1)","rgba(242, 242, 242, 1)"]} style = {styles.infoEditContainer}>
+        <ScrollView
+          scrollEventThrottle={1}
+          showsVerticalScrollIndicator={true}
+          style={styles.infoEditContainerScrollView}
+        >
+          <Header title = {title} wasteCondition={wasteCondition} workData={workData}/>
+          <Divider/>
+          <View>
+            <Text style={styles.wasteCategoryItemTitle}>Waste amount by category</Text>
           </View>
           <ScrollView
             horizontal scrollEventThrottle={1}
@@ -73,36 +142,41 @@ export const BottomSheetInfo = ({title, data, dataPresent}) => {
               paddingRight: 20
             }}
           >
-            {Object.entries(data).map(([key, value])=>{
-              return(<WasteAmountItem key={key} category={key} amount={value}/>)
+            {_.isEmpty(wasteData)? (<View><Text>No Waste Data</Text></View>)
+              : Object.entries(wasteData).map(([key, value])=>{
+              return(<WasteCategoryItem key={key} category={key} amount={value}/>)
             })}
           </ScrollView>
-        </View>
-      </View>
-    )
-  }else{
-    return(
-      <View style = {styles.infoEdit}>
-        <View style = {styles.infoEditContainer}>
-          <View style = {styles.infoHeader}>
-            <View><Text>{title}</Text></View>
-            <View><Text>WasteStatus</Text></View>
-            <View><Text>WorkStatus</Text></View>
-          </View>
-          <Text>Empty</Text>
-        </View>
-      </View>
-    )
+        </ScrollView>
+      </LinearGradient>
+    </View>
+  );
+}
+function getBGColor(buttonStatus){
+  switch(buttonStatus){
+    case "unconfirmed":
+    case "medium":
+      return ({backgroundColor:colors.warningButton});
+    case "assigned":
+    case "low":
+      return ({backgroundColor:colors.primaryButton});
+    case "on progress":
+      return ({backgroundColor:colors.secondaryButton});
+    case "finished":
+      return ({backgroundColor:colors.successButton});
+    case "high":
+      return ({backgroundColor:colors.dangerButton});
+    default:
+      return ({backgroundColor:colors.primaryButton});
   }
 }
-
 const styles = StyleSheet.create({
   searchBottomSheet:{
     flex:1,
     justifyContent:"flex-end",
   },
   searchContainer:{
-    backgroundColor:"#f9fafb",
+    backgroundColor:"rgba(249, 250, 251, 1)",
     width:"100%",
     height:"85%",
     borderTopLeftRadius:5,
@@ -123,20 +197,87 @@ const styles = StyleSheet.create({
     flex:1,
     justifyContent:"flex-end"
   },
+  infoEditContainerScrollView:{
+    flex:1,
+  },
   infoEditContainer:{
-    backgroundColor:"#f9fafb",
+    backgroundColor:"rgba(249, 250, 251, 1)",
     width:"100%",
     height:"30%",
-    borderTopLeftRadius:5,
-    borderTopRightRadius:5,
+    borderTopLeftRadius:10,
+    borderTopRightRadius:10,
     ...shadow.DP24
   },
+  //Info Header
   infoHeader:{
-    
+    margin:10,
+  },
+  headerTitleContainer:{
+    flexDirection:"row",
+    marginBottom:5
+  },
+  headerTitle:{
+    flex:3,
+    fontFamily:"Roboto",
+    fontWeight:"bold",
+    fontSize:20,
+  },
+  headerSecondaryTitle:{
+    flex:1,
+    fontFamily:"Roboto",
+    fontWeight:"normal",
+    fontSize:15,
+    color:`${colors.primaryButton}`
+  },
+  chipsContainer:{
+    flexDirection:"row",
+    marginBottom:5
+  },
+  chipsContainerItem:{
+    flex:1
+  },  
+  chipsTitle:{
+    paddingVertical:5, 
+    fontWeight:"bold",
+    fontSize:14, 
+  },
+  //Chips
+  chipsIcon: {
+    marginRight: 5,
+  },
+  chipsItem: {
+    flexDirection:"row",
+    borderRadius:20,
+    padding:5,
+    paddingHorizontal:10, 
+    marginHorizontal:10,
+    height:30,
+    width:"70%",
+    ...shadow.DP1
+  },
+  chipsText: {
+    fontFamily:"Roboto", 
+    fontSize:12, 
+    fontWeight:"bold", 
+    color:"#fff"
+  },
+  //Waste Category
+  wasteCategoryItemTitle: {
+    margin:10,
+    fontFamily:"Roboto",
+    fontWeight:"bold",
+    fontSize:18,
   },
   wasteCategoryScrollView: {
-    //position:'absolute', 
-    paddingVertical:10,
-    paddingHorizontal:10
+    //position:'absolute',
+    margin:10,
   },
+  wasteCategoryItemContainer: {
+    backgroundColor:"rgba(249, 250, 251, 1)", 
+    borderRadius:5, 
+    paddingHorizontal:10, 
+    marginHorizontal:5, 
+    height:60, 
+    ...shadow.DP1
+  }
 });

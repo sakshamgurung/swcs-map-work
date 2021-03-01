@@ -4,9 +4,10 @@
 import React, { Component} from 'react';
 import {connect} from 'react-redux';
 //action creator
-import {actions as exploreActions} from '../../ducks/explore';
-import { Dimensions,StyleSheet, View, Text, PermissionsAndroid, Platform, 
-  Alert, TextInput, ScrollView, Keyboard } from 'react-native';
+import {actions as exploreActions} from 'ducks/explore';
+import {types as exploreActionTypes} from 'ducks/explore';
+import { Dimensions, StyleSheet, View, Text, PermissionsAndroid, Platform, 
+  Alert, TextInput, ScrollView} from 'react-native';
 /* Other dependencies */
 import MapView,{ PROVIDER_GOOGLE, Polygon, Polyline, AnimatedRegion, Marker, Callout } from 'react-native-maps';
 import {default as MapViewCluster} from 'react-native-map-clustering';
@@ -14,20 +15,21 @@ import Geolocation from 'react-native-geolocation-service'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcons from 'react-native-vector-icons/Ionicons'
 /** Utilities */
-import {getRegionFromMarkers, grahamScan, isPointInsidePolygon, getCheckpoints} from 'lib/utilities';
+import {grahamScan, getCheckpoints} from 'lib/utilities';
 import _ from 'lodash';
 /** Components */
 import Slider from '@react-native-community/slider';
 import {FAB, Button, Chips} from 'lib/components/button';
-import {CustomModal, BottomSheetList, SearchModal, BottomSheetInfo} from 'lib/components/card';
+import {CustomModal, SearchModal, BottomSheetInfo} from 'lib/components/card';
 import {CheckpointMarker} from 'lib/components/customMarker';
 import {MapEditPanel} from 'lib/components/frame';
-import {DummySearchBox} from 'lib/components/input';
+import {DummySearchBox, MapSearch as ChipsFilterSearch} from 'lib/components/input';
 /** res */
 import {shadow, colors} from 'lib/res';
 import {mapStyle} from './style';
 
-import {trackContains, zoneContains, getObjects, getTrackWasteData} from 'mock/explore/MockServer';
+import {trackContains, zoneContains} from 'mock/explore/MockServer';
+import { bindActionCreators } from 'redux';
 
 class Point {
   constructor(c, identifier) {
@@ -52,9 +54,7 @@ class Point {
     this.longitude = value;
   }
 }
-
-const window = Dimensions.get("window");
-const screen = Dimensions.get("screen");
+// using ES6 class
 class ExploreMap extends Component {
   _currentRegion:AnimatedRegion;
   constructor() {
@@ -62,228 +62,201 @@ class ExploreMap extends Component {
     this._currentRegion = new MapView.AnimatedRegion({
       latitude: 28.2674,
       longitude: 83.9750,
-      latitudeDelta: 0.15,
-      longitudeDelta: 0.15});
-    this.state = {
-      categories: [
-        {
-          name: 'Today\'s jobs',
-          id: 'c1'
-          //icon: <Ionicons name="ios-restaurant" style={styles.chipsIcon} size={18} />,
-        },
-        {
-          name: 'Active jobs',
-          id: 'c2'
-          //icon: <Ionicons name="md-restaurant" style={styles.chipsIcon} size={18} />,
-        },
-        {
-          name: 'Staff',
-          id: 'c3'
-          //icon: <MaterialCommunityIcons name="food" style={styles.chipsIcon} size={18} />,
-        },
-        {
-          name: 'Vehicles',
-          id: 'c4'
-          //icon: <Fontisto name="hotel" style={styles.chipsIcon} size={15} />,
-        }
-      ],
-      region:{
-        latitude: 28.2674,
-        longitude: 83.9750,
-        latitudeDelta: 0.015,
-        longitudeDelta: 0.0121},
-      dimensions: {window,screen}, hasMapPermission:false,
-      showDefaultPanel:true, mapSearchVisible:true, mapSearchFocused:false, searchQuery:"",
-      showZonePanel:false,
-      showTrackPanel:false, showTrackPanelState1:false,
-      nameModalVisible:false, nameModalValue:"",
-      currentMarkerID:"",
-      zone:[], queryZone:[], fullQueryZone:[],
-      zonePoints: [],
-      track:[], queryTrack:[], fullQueryTrack:[],
-      trackPoints:[], trackCheckPoints:[], interval:50,
-      selectedTrackIndex:-1, selectedZoneIndex:-1,
-      trackWasteData:{},
-    };
+      latitudeDelta: 0.10,
+      longitudeDelta: 0.10});
+    this.references = {};
+    //this._mapViewRef = React.createRef();
   }
 
-  async componentDidMount(): void {
-    Dimensions.addEventListener("change", this.onChange);
+  componentDidMount(){
     this.requestFineLocation();
-    this.makeRemoteRequest();
+    this._makeRemoteRequest();
   }
-  componentWillUnmount(): void{
+  componentWillUnmount(){
     Dimensions.removeEventListener("change", this.onChange);
     if(this.watchId){
       Geolocation.clearWatch(this.watchId);
     }
   }
   /** fetching data */ 
-  makeRemoteRequest = _.debounce(async() => {
-    const objects = await getObjects(this.state.searchQuery);
-    this.setState({track:objects.trackDataResult, zone:objects.zoneDataResult,
-      queryTrack:objects.trackDataResult, queryZone:objects.zoneDataResult,
-      fullQueryTrack:objects.trackDataResult, fullQueryZone:objects.zoneDataResult
-    });
-  },0);
+  _makeRemoteRequest = _.debounce(() => {
+    this.props.thunkLoadGeoObjects(this.props.searchQuery);
+  },500);
+  
+  _makeRequestForWorkData(geoObjectId, selectedGeoObjectIndex, workDataOf, infoType){
+    this.props.thunkLoadGeoObjectWork(geoObjectId, selectedGeoObjectIndex, workDataOf, infoType);
+    return new Promise((resolve, reject)=> resolve());
+  }
 
-  makeRequestForWasteData = async(trackID, index) => {
-    const trackWasteData = await getTrackWasteData(trackID);
+  _makeRequestForWasteData(geoObjectId, selectedGeoObjectIndex, wasteDataOf){
     //after setting selectedTrackIndex checkpoints appears and bottomsheet of info
-    this.setState({trackWasteData, selectedTrackIndex:index});
+    this.props.thunkLoadGeoObjectWaste(geoObjectId, selectedGeoObjectIndex, wasteDataOf);
   }
 
   /**location handlers*/
   async requestFineLocation() {
     try {
-        if(Platform.OS === 'android'){
-          const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
-          //To Check, If Permission is granted
-          if (granted === PermissionsAndroid.RESULTS.GRANTED){
-            this.setState({hasMapPermission:true});
-            this.watchId = Geolocation.watchPosition(pos => {
-              const region={
-                latitude:pos.coords.latitude,
-                longitude:pos.coords.longitude, 
-                latitudeDelta:0.15,
-                longitudeDelta:0.15};
-              this._currentRegion.setValue(region);
-            });
-          }
+      if(Platform.OS === 'android'){
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+        //To Check, If Permission is granted
+        if (granted === PermissionsAndroid.RESULTS.GRANTED){
+          this.watchId = Geolocation.watchPosition(position => {
+            const region={
+              latitude:position.coords.latitude,
+              longitude:position.coords.longitude, 
+              latitudeDelta:0.15,
+              longitudeDelta:0.15};
+            this._currentRegion.setValue(region);
+            //this.props.locationGranted(position);
+          });
         }
+      }
     } catch (err) {
-        console.warn("Permissioin denied: ",err);
+      this.props.locationDenied(err);
+      console.warn("Permissioin denied: ",err);
     }
   }
-  /** Generic Handlers */
-  onChange = ({ window, screen }) => {
-    this.setState({ dimensions: { window, screen } });
-  }
-  
+  //using class field syntax
   _onRegionChangeComplete = (region) => {
     this._currentRegion.setValue(region);
-    this.setState({region});
+    //this.props.changeRegion(region);
   }
-
-  /** Button Handlers */
-
-  _showAll = () => {
-    const points = this.state.zonePoints;
-    const region = getRegionFromMarkers(points);
+  _showAll = (coordinate) => {
+    const region = {
+      ...coordinate,
+      latitudeDelta: 0.15,
+      longitudeDelta: 0.15
+    }
     this._currentRegion
-      .timing({...region, duration:1000})
+      .timing({ ...region,duration: 1000})
       .start();
   };
+  /** Button Handlers */
 
   _onPressDone = (panelName) => {
     if(panelName == "zone"){
-      if(this.state.zonePoints.length >=3){
-        const zoneID = `${ Date.now() }.${ Math.random() }`;
-        const zonePoints = this.state.zonePoints;
-        const zoneName = this.state.nameModalValue;
-        const newZone = _.cloneDeep({zoneID, zoneName, zonePoints});
-        const zone = _.cloneDeep([...this.state.zone,newZone]);
-        this.setState({zone, zonePoints:[], currentMarkerID:"", nameModalValue:"", 
-        nameModalVisible:false, showZonePanel:false, showDefaultPanel:true, mapSearchVisible:true});
+      if(this.props.zonePoints.length >=3){
+        const zoneId = `${ Date.now() }.${ Math.random() }`;
+        const zonePoints = this.props.zonePoints;
+        const zoneName = this.props.nameModalValue;
+        const newZone = _.cloneDeep({zoneId, zoneName, zonePoints});
+        const zone = [...this.props.zone,newZone];
+        this.props.doneZonePanel(zone);
       }else{
         Alert.alert("Less than three points!","To create a region atleast three points are needed",[{text:"Ok"}]);
       }
     }
     if(panelName == "track"){
-      if(this.state.trackPoints.length >=2){
-        const trackID = `${ Date.now() }.${ Math.random() }`;
-        const trackPoints = this.state.trackPoints;
-        const trackCheckPoints = this.state.trackCheckPoints;
-        const trackName = this.state.nameModalValue;
-        const newTrack = _.cloneDeep({trackID, trackName, trackPoints, trackCheckPoints});
-        const track = _.cloneDeep([...this.state.track,newTrack]);
-        this.setState({track, trackPoints:[],trackCheckPoints:[], interval:50, currentMarkerID:"",
-          nameModalValue:"", nameModalVisible:false, showTrackPanel:false, showDefaultPanel:true,
-          mapSearchVisible:true});
+      if(this.props.trackPoints.length >=2){
+        const trackId = `${ Date.now() }.${ Math.random() }`;
+        const trackPoints = this.props.trackPoints;
+        const trackCheckpoints = this.props.trackCheckpoints;
+        const trackName = this.props.nameModalValue;
+        const newTrack = _.cloneDeep({trackId, trackName, trackPoints, trackCheckpoints});
+        const track = [...this.props.track,newTrack];
+        this.props.doneTrackPanel2(track);
       }else{
         Alert.alert("Less than two points!","To create a track atleast two points are needed",[{text:"Ok"}]);
       }
     }
   }
-
   _onPressCancel = (panelName) => {
     if(panelName == "zone"){
-      if(this.state.zonePoints.length != 0){
+      if(this.props.zonePoints.length != 0){
         Alert.alert("Do you want to cancel?","Selecting Yes will delete your current progress",
-          [
-            {
-              text: "No"
-            },
-            { 
+          [{text: "No"},{ 
               text: "Yes", onPress: () => {
-              this.setState({points:[], showZonePanel:false, currentMarkerID:"", showDefaultPanel:true, mapSearchVisible:true});
+              this.props.cancelZonePanel();
             }}
           ]
           ,{cancelable:true}
         );
       }else{
-        this.setState({showZonePanel:false, showDefaultPanel:true, currentMarkerID:"", mapSearchVisible:true});
+        this.props.cancelZonePanel();
       }
     }
     if(panelName == "track"){
-      if(this.state.trackPoints.length != 0){
+      if(this.props.trackPoints.length != 0){
         Alert.alert("Do you want to cancel?","Selecting Yes will delete your current progress",
-          [{
-              text: "No"
-            },{ 
+          [{text: "No"},{
               text: "Yes", onPress: () => {
-              this.setState({trackPoints:[], trackCheckPoints:[], showTrackPanel:false, currentMarkerID:"",
-                showDefaultPanel:true, mapSearchVisible:true});
+              this.props.cancelTrackPanel2();
             }}
           ]
           ,{cancelable:true}
         );
       }else{
-        this.setState({showTrackPanel:false, showDefaultPanel:true, currentMarkerID:"", mapSearchVisible:true});
+        this.props.cancelTrackPanel2();
       }
     }
   }  
   _onPressMoveTo = (from, to) => {
     if(from == "zone" && to == "nameModal"){
-      if(this.state.zonePoints.length >= 3 ){
-        this.setState({nameModalVisible:true});
+      if(this.props.zonePoints.length >= 3 ){
+        this.props.toggleNameModal();
       }else{
         Alert.alert("Less than three points!","To create a region atleast three points are needed",[{text:"Ok"}]);
       }
     }
-    if(from == "trackPanel" && to == "trackPanelState1"){
-      if(this.state.trackPoints.length >= 2 ){
-        this.setState({showTrackPanel:false, showTrackPanelState1:true});
+    if(from == "trackPanel1" && to == "trackPanel2"){
+      if(this.props.trackPoints.length >= 2 ){
+        this.props.toggleTrackPanels();
+        this.props.intervalChanged(150);
+        this._onPressProcessCheckpoint();
       }else{
         Alert.alert("Less than two points!","To create a track atleast two points are needed",[{text:"Ok"}]);
       }
     }
-    if(from == "trackPanelState1" && to == "trackPanel"){
-      this.setState({showTrackPanelState1:false, showTrackPanel:true, trackCheckPoints:[], interval:50});
+    if(from == "trackPanel2" && to == "trackPanel1"){
+      this.props.toggleTrackPanels();
     }
   }
-  _getMarkerKey = (markerId) => {
-    console.log("markerId ",markerId);
-    //const markerId = e._targetInst.return.key;
-    this.setState({currentMarkerID:markerId});
+  _getMarkerKey = (e, identifier = "", coordinate = "" ) => {
+    let markerId = "";
+    if(identifier != ""){
+      markerId = identifier;
+    }else{
+      //e is SyntheticEvent use e.persist() to see the event value if needed
+      markerId = e._targetInst.return.key;
+    }
+    console.log("_getMarkerKey: ",markerId);
+    this.props.markerSelected(markerId);
+    if(coordinate != ""){
+      //this._showAll(coordinate);
+    }
   }
   _onDragReposition = (e, markerOf) => {
     if(markerOf == "track"){
       let id = e._targetInst.return.key;
-      let index = _.findIndex(this.state.trackPoints, (o) => o.identifier == id);
-      const newPoint = new Point(e.nativeEvent.coordinate, this.state.trackPoints[index].identifier);
-      const trackPoints = _.cloneDeep(this.state.trackPoints);
+      let index = _.findIndex(this.props.trackPoints, (o) => o.identifier == id);
+      const newPoint = new Point(e.nativeEvent.coordinate, this.props.trackPoints[index].identifier);
+      const trackPoints = _.cloneDeep(this.props.trackPoints);
       trackPoints[index] = _.cloneDeep(newPoint);
-      this.setState({trackPoints});
+      this.props.dragTrackMarker(trackPoints);
+    }else if(markerOf == "zone"){
+      let id = e._targetInst.return.key;
+      let index = _.findIndex(this.props.zonePoints, (o) => o.identifier == id);
+      const newPoint = new Point(e.nativeEvent.coordinate, this.props.zonePoints[index].identifier);
+      const zonePoints = _.cloneDeep(this.props.zonePoints);
+      zonePoints[index] = _.cloneDeep(newPoint);
+      if(zonePoints.length <=3){
+        this.props.dragZoneMarker(zonePoints);
+      }else{
+        const tempZonePoints = grahamScan(zonePoints);
+        this.props.dragZoneMarker(tempZonePoints);
+      }
     }
   }
   _onMapPress = (e) => {
-    this.setState({selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:""});
+    this.props.dismissSelectedGeoObject();
+  }
+  _onPressChips = (type, query, id ) => {
+    this.props.thunkChipsSelected(type, query, id);
+    
   }
   // Zone panel button handlers
   _toggleZonePanel = () => {
-    this.setState({showDefaultPanel:false, mapSearchVisible:false, 
-      selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:"",showZonePanel:true});
+    this.props.togglePanel(exploreActionTypes.SHOW_ZONE_PANEL);
   }
 
   _onPressAddZonePoint = () => {
@@ -291,109 +264,125 @@ class ExploreMap extends Component {
     const longitude = this._currentRegion.longitude._value;
     const coordinate = {latitude, longitude};
     const newPoint = new Point(coordinate, `${ Date.now() }.${ Math.random() }`);
-    const rawPoints = _.cloneDeep([...this.state.zonePoints, newPoint]);
+    const rawPoints = _.cloneDeep([...this.props.zonePoints, newPoint]);
     if(rawPoints.length <=3){
-      this.setState({zonePoints:rawPoints});
+      this.props.addZonePoint(rawPoints);
       return;
     }
     const zonePoints = grahamScan(rawPoints);
-    this.setState({ zonePoints });
+    this.props.addZonePoint(zonePoints);
   }
 
   _onPressDeleteZonePoint = () => {
-    const markerId = this.state.currentMarkerID;
+    const markerId = this.props.currentMarkerId;
     let removeIndex = 0;
-    this.state.zonePoints.map((zonePoint, index)=>{
+    this.props.zonePoints.map((zonePoint, index)=>{
       if(zonePoint.identifier == markerId) {
         removeIndex = index;
       }
     });
-    //call action creator
-    const zonePoints = _.cloneDeep(this.state.zonePoints);
-    zonePoints.splice(removeIndex,1);
-    this.setState({zonePoints});
+    this.props.deleteZonePoint(removeIndex);
+  }
+  _onPressZone = (e, key = "", from = "default") => {
+    //zoneSelected() action creator not used yet
+    let zoneId = "";
+    if(key == ""){
+      zoneId = e._targetInst.return.key;
+    }else {
+      zoneId = key;
+    }
+    let index = _.findIndex(this.props.zone, (o) => {return o.zoneId == zoneId});
+    if(from == "list"){
+      this._onCloseSearchBox();
+    }
+    this._makeRequestForWorkData(zoneId, index, "zone", "summary")
+    .then(()=>{
+      this._makeRequestForWasteData(zoneId, index, "zone");
+    });
   }
   // Track panel button handlers
-  _toggleTrackPanel =()=> {
-    this.setState({showDefaultPanel:false, mapSearchVisible:false, 
-      selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerID:"", showTrackPanel:true});
+  _toggleTrackPanel = ()=> {
+    this.props.togglePanel(exploreActionTypes.SHOW_TRACK_PANEL_1);
   }
   _onPressAddTrackPoint = () => {
     const latitude = this._currentRegion.latitude._value;
     const longitude = this._currentRegion.longitude._value;
     const coordinate = {latitude, longitude};
     const newPoint = new Point(coordinate, `${ Date.now() }.${ Math.random() }`);
-    //let n = this.state.zonePoints.length;
-    //if(isPointInsidePolygon(this.state.zonePoints, n, newPoint)){
-    const trackPoints = _.cloneDeep([...this.state.trackPoints, newPoint]);
-    this.setState({trackPoints});
+    //let n = this.props.zonePoints.length;
+    //if(isPointInsidePolygon(this.props.zonePoints, n, newPoint)){
+    const trackPoints = _.cloneDeep([...this.props.trackPoints, newPoint]);
+    this.props.addTrackPoint(trackPoints);
     // }else{
     //   Alert.alert("Track point not inside the zone","",[],{cancelable:true});
     // }
   }
+  _preetifier(data){
+    for(let i=0; i<data.length; i++){
+      console.log(data[i],"\n");
+    }
+  }
   _onPressProcessCheckpoint = () => {
-    if(this.state.trackPoints.length >=2){
-      const trackCheckPoints = getCheckpoints(this.state.trackPoints,this.state.interval);
-      const temp = [];
-      for (let i = 0; i<trackCheckPoints.length; i++) {
-        const newPoint = new Point(
-          {latitude:trackCheckPoints[i].x,longitude:trackCheckPoints[i].y}
-          , `${ Date.now() }.${ Math.random() }`);
-        temp.push(newPoint);
-      }
-      this.setState({trackCheckPoints:temp});
+    if(this.props.trackPoints.length >=2){
+      const trackCheckpoints = getCheckpoints(this.props.trackPoints, this.props.interval);
+      this.props.checkpointsProcessed(trackCheckpoints);
     }
   }
   _onPressDeleteTrackPoint = () => {
-    const markerId = this.state.currentMarkerID;
+    const markerId = this.props.currentMarkerId;
     let removeIndex = 0;
-    this.state.trackPoints.map((trackPoint, index)=>{
+    this.props.trackPoints.map((trackPoint, index)=>{
       if(trackPoint.identifier == markerId) {
         removeIndex = index;
       }
     });
-    //call actioncreator
-    const trackPoints = _.cloneDeep(this.state.trackPoints);
-    trackPoints.splice(removeIndex,1);
-    this.setState({trackPoints});
+    this.props.deleteTrackPoint(removeIndex);
   }
-  _onPressTrack = (e) => {
-    const trackID = e._targetInst.return.key;
-    let index = _.findIndex(this.state.track, (o) => {return o.trackID == trackID});
-    this.makeRequestForWasteData(trackID, index);
-    //this.setState({selectedTrackIndex:index});
-  }
-  _onPressZone = (e) => {
-    const zoneID = e._targetInst.return.key;
-    let index = _.findIndex(this.state.zone, (o) => {return o.zoneID == zoneID});
-    this.setState({selectedZoneIndex:index});
+  _onPressTrack = (e, key = "", from = "default") => {
+    //trackSelected() action creator not used yet
+    let trackId = "";
+    if(key == ""){
+      trackId = e._targetInst.return.key;
+    }else {
+      trackId = key;
+    }
+    let index = _.findIndex(this.props.track, (o) => {return o.trackId == trackId});
+    if(from == "list"){
+      this._onCloseSearchBox();
+    }
+    this._makeRequestForWorkData(trackId, index, "track", "summary")
+    .then(()=>{
+      this._makeRequestForWasteData(trackId, index, "track");
+    });
   }
 
   /** Renderers */
   // Zone renderers
-  _renderAddZonePolygon = () => {
-    if(this.state.showZonePanel){
-      if(this.state.zonePoints.length >= 3){
+  _renderAddZone(){
+    if(this.props.showZonePanel){
+      if(this.props.zonePoints.length >= 3){
         return(
-          <Polygon coordinates={ this.state.zonePoints } fillColor="rgba(9,176,73,0.50)" strokeColor="rgba(9,176,73,0.50)"/>  //greenish color
+          <Polygon coordinates={ this.props.zonePoints } fillColor="rgba(9,176,73,0.50)" strokeColor="rgba(9,176,73,0.50)"/>  //greenish color
         );
       }
       return(
-        <Polyline coordinates={ this.state.zonePoints } strokeColor="rgba(9,176,73,0.50)" />  
+        <Polyline coordinates={ this.props.zonePoints } strokeColor="rgba(9,176,73,0.50)" />  
       );
     }
   }
-  _renderAddZonePolygonMarkers =() => {
-    if(this.state.showZonePanel){
-      if(this.state.zonePoints.length >=1){
+  _renderAddZoneMarkers(){
+    if(this.props.showZonePanel){
+      if(this.props.zonePoints.length >=1){
         return(
-          this.state.zonePoints.map((m) => (
+          this.props.zonePoints.map((m) => (
             <Marker
               key={ m.identifier }
               coordinate={ m }
+              draggable={true}
+              onDragEnd={e => this._onDragReposition(e, "zone")}
               onPress={e => this._getMarkerKey(e)}
             >
-              <Callout onPress={this._onPressDeleteZonePoint}>
+              <Callout onPress={() => this._onPressDeleteZonePoint()}>
                 <Text>Delete Point</Text>
               </Callout>
             </Marker>
@@ -402,39 +391,39 @@ class ExploreMap extends Component {
       }
     }
   }
-  _renderZonePolygon = () => {
-    if(this.state.zone.length != 0){
+  _renderZone(){
+    if(this.props.zone.length != 0){
       return(
-        this.state.zone.map(z => (
-          <Polygon key={z.zoneID} coordinates={z.zonePoints}
-          tappable={true} 
-          fillColor="rgba(75, 150, 235,0.50)" strokeColor="rgba(75, 150, 235,0.50)"/> //bluish color
+        this.props.zone.map(z => (
+          <Polygon key={z.zoneId} coordinates={z.zonePoints}
+          tappable={true}  onPress={(e) => this._onPressZone(e)}
+          fillColor="rgba(75, 150, 235,0.50)" strokeColor="rgba(29, 60, 94, 0.50)"/> //bluish color
         ))
       )
     }
   }
 
   // Track renderers
-  _renderAddTrackPolyline = () => {
-    if(this.state.showTrackPanel || this.state.showTrackPanelState1){
+  _renderAddTrack(){
+    if(this.props.showTrackPanel1 || this.props.showTrackPanel2){
       return(
-        <Polyline coordinates={this.state.trackPoints} strokeColor="rgba(242, 180, 65, 0.80)" strokeWidth={5}/>
+        <Polyline coordinates={this.props.trackPoints} strokeColor="rgba(242, 180, 65, 0.80)" strokeWidth={5}/>
       )
     }
   }
-  _renderAddTrackPolylineMarkers = () => {
-    if(this.state.showTrackPanel){
-      if(this.state.trackPoints.length >=1){
+  _renderAddTrackMarkers(){
+    if(this.props.showTrackPanel1){
+      if(this.props.trackPoints.length >=1){
         return(
-          this.state.trackPoints.map((m) => (
+          this.props.trackPoints.map((m) => (
             <Marker
               key={ m.identifier }
               coordinate={ m }
               draggable = {true}
-              onDragEnd = {(e)=> {this._onDragReposition(e, "track")}}
+              onDragEnd = {e => this._onDragReposition(e, "track")}
               onPress={e => this._getMarkerKey(e)}
             >
-              <Callout onPress={this._onPressDeleteTrackPoint}>
+              <Callout onPress={() => this._onPressDeleteTrackPoint()}>
                     <Text>Delete Point</Text>
               </Callout>
             </Marker>
@@ -443,46 +432,104 @@ class ExploreMap extends Component {
       }
     }
   }
-  _renderTrackCheckPoints = () => {
-    if(this.state.trackCheckPoints.length >=2 && this.state.showTrackPanelState1){
+  _renderProcessedCheckpoints(){
+    if(this.props.trackCheckpoints.length >=2 && this.props.showTrackPanel2){
       return(
-        this.state.trackCheckPoints.map((t) => 
+        this.props.trackCheckpoints.map((t) => 
         <CheckpointMarker key={t.identifier} coordinate={{latitude:t.latitude,longitude:t.longitude}} 
-        onPress={e => this._getMarkerKey(e)}/>
+        />
         )
         );
       }
   }
-  _renderTrackPolyline = () => {
-    if(this.state.track.length != 0){
+  _renderTrack(){
+    if(this.props.track.length != 0){
       return(
-        this.state.track.map(t => (
-          <Polyline 
-          tappable = {true}
-          onPress = {e => this._onPressTrack(e)}
-          key={t.trackID} coordinates={t.trackPoints} 
-          strokeColor="rgba(245, 146, 24, 0.80)" strokeWidth={5}/> //bluish color
+        this.props.track.map(t => (
+          <Polyline key={t.trackId} coordinates={t.trackPoints} 
+          tappable = {true} onPress = {e => this._onPressTrack(e)}
+          strokeColor="rgba(250, 125, 0, 0.80)" strokeWidth={3}/> //orangish color
         ))
       )
     }
   }
 
-  // Renderers on top of default panels
-  _renderDummySearchBox = () => {
-    if(this.state.mapSearchVisible){
+  // Renderers for panels and utility components
+  _renderDummySearchBox(){
+    if(this.props.mapSearchVisible){
       return(
         //toggle searchBox
         <DummySearchBox
-          onPress = {()=>this.setState({mapSearchFocused:true, mapSearchVisible:false})}
+          onPress = {()=>{this.props.dismissSelectedGeoObject();this.props.toggleSearchBox()}}
           rightIcon = {
             <Button buttonType="iconOnly" icon={<IonIcons name="ios-search" color="#000" size={20}/>}/>
           }
         />)
     } 
     return null;
-  }  
-  _renderChips = () => {
-    if(this.state.mapSearchVisible){
+  }
+  _handleSearchQuery = (text) => {
+    const formatedQuery = text.toLowerCase();
+    const trackDataResult = _.filter(this.props.fullQueryTrack, td => {
+      return trackContains(td, formatedQuery);
+    });
+    const zoneDataResult = _.filter(this.props.fullQueryZone, zd => {
+      return zoneContains(zd, formatedQuery);
+    });
+    this.props.thunkQueryChanged(trackDataResult, zoneDataResult,
+      formatedQuery);
+    // this.props.thunkQueryChanged(trackDataResult, zoneDataResult,
+    //   formatedQuery).then(() => {this._makeRemoteRequest()});
+  }
+  _onCloseSearchBox = () => {
+    //this.props.thunkClearCloseSearchBox();
+    this.props.thunkToggleSearchBox()
+    .then(() => { this._handleSearchQuery("")});
+  }
+  _renderSearchList(){
+    //android:windowSoftInputMode="adjustResize"||"adjustPan" from AndroidManifest.xml
+    if(this.props.mapSearchFocused){
+      return(
+        <SearchModal
+          //autoFocus = {true}
+          //toggleSearchBox using android back button
+          onRequestClose = {this._onCloseSearchBox}
+          onChangeText = {text => this._handleSearchQuery(text)}
+          value = {this.props.searchQuery}
+          //toggleSearchBox
+          onPressBack = {this._onCloseSearchBox}
+          onPressClear = {() => this._handleSearchQuery("")}
+          trackData = {this.props.queryTrack}
+          zoneData = {this.props.queryZone}
+          //sending only the reference of _onPressTrack()
+          onPressTrack = {this._onPressTrack}
+          //sending only the reference of _onPressZone()
+          onPressZone = {this._onPressZone}
+        />
+      )
+    }
+  }
+  _renderChipsFilterSearch(){
+    if(this.props.selectedChipsId != ""){
+      const index = _.findIndex(this.props.categories, (o) => {
+        return o.id == this.props.selectedChipsId;
+      });
+      const cat = this.props.categories[index];
+      return(
+        <ChipsFilterSearch
+        visible = {true}
+        autoFocus = {false}
+        editable = {false}
+        value = {cat.name}
+        rightIcon = {
+          <Button buttonType="iconOnly" icon={<MaterialIcon name="close" color="#000" size={25}/>}
+          onPress={this._onMapPress}/>}
+        />
+      )
+    }
+  }
+  _renderChips(){
+    if(this.props.mapSearchVisible){
       return(
         <ScrollView
           horizontal scrollEventThrottle={1}
@@ -492,77 +539,159 @@ class ExploreMap extends Component {
             paddingRight: 20
           }}
         >
-          {this.state.categories.map((category) => (
+          {this.props.categories.map((category) => (
             <Chips
-             name = {category.name} key={category.id}
-            onPress = {() => {console.log("chips: ",category.id)}}/>
+              name = {category.name} key={category.id} id={category.id}
+              selectedChipsId={this.props.selectedChipsId }
+              query = {category.query} type = {category.type}
+              onPress = {this._onPressChips}/>
           ))}
         </ScrollView>
       )
     }else return null;
   }
-  _renderSelectedTrackCheckPoints = () => {
-    if((this.state.showDefaultPanel) && (this.state.selectedTrackIndex >= 0)){
-      let index = this.state.selectedTrackIndex;
+  _renderChipsQueryTrack(){
+    if(this.props.selectedChipsId != ""){
       return(
-        this.state.track[index].trackCheckPoints.map((t) => 
-          <CheckpointMarker key={t.identifier} coordinate={{latitude:t.latitude,longitude:t.longitude}} 
-          onPress={() => this._getMarkerKey(t.identifier)}/>
-        )
-      );
-    }
-  }
-  _renderSelectedZoneMarker = () => {
-    if((this.state.showDefaultPanel) && (this.state.selectedZoneIndex >= 0)){
-      let index = this.state.selectedZoneIndex;
-      return(
-        this.state.zone[index].zonePoints.map((zp) => 
-          <Marker 
-            key = {zp.identifier}
-            coordinate = {zp}
+        this.props.chipsFilteredTrack.map(t => (
+          <Polyline
+            key = {`c.${t.trackId}`} coordinates = {t.trackPoints}
+            strokeWidth = {4} strokeColor = "rgba(156, 19, 19, 0.8)"
           />
+        ))
+      );
+    }
+  }
+  _renderChipsQueryZone(){
+    if(this.props.selectedChipsId != ""){
+      return(
+        this.props.chipsFilteredZone.map(z => (
+          <Polygon
+            key = {`c.${z.zoneId}`} coordinates = {z.zonePoints}
+            strokeColor = "rgba(176, 29, 0, 0.8)" fillColor = "rgba(255, 13, 13, 0.7)"
+          />
+        ))
+      );
+    }
+  }
+  _renderSelectedTrackCheckpoints(){
+    if((this.props.showDefaultPanel) && (this.props.selectedTrackIndex >= 0)){
+      let index = this.props.selectedTrackIndex;
+      return(
+        this.props.track[index].trackCheckpoints.map((t) => 
+          <CheckpointMarker key={t.identifier} coordinate={{latitude:t.latitude, longitude:t.longitude}}
+          id = {t.identifier}
+          onPress={this._getMarkerKey}/>
+        )
+      );
+    };
+  }
+  _renderHighlightOnSelectedCheckpoint(){
+    const {showDefaultPanel, selectedTrackIndex, currentMarkerId} = this.props;
+    if(showDefaultPanel && selectedTrackIndex >= 0 && currentMarkerId != ""){
+      const {track} = this.props;
+      const t = _.filter(track[selectedTrackIndex].trackCheckpoints,(o)=>{
+        return o.identifier === currentMarkerId ;
+      });
+      return(
+        <CheckpointMarker key={t[0].identifier} coordinate={{latitude:t[0].latitude, longitude:t[0].longitude}} 
+        markerType={"highlight"}/>
+      )
+    }
+  }
+  _renderSelectedZoneMarker(){
+    if((this.props.showDefaultPanel) && (this.props.selectedZoneIndex >= 0)){
+      let index = this.props.selectedZoneIndex;
+      return(
+        this.props.zone[index].zonePoints.map((zp) => 
+          <Marker key = {zp.identifier} coordinate = {zp}/>
         )
       );
     }
   }
-  _renderInfoEditFooter = ()=>{
-    if(this.state.showDefaultPanel && this.state.selectedTrackIndex >=0 ){
-      let trackName = this.state.track[this.state.selectedTrackIndex].trackName;
-      const {totalWasteSummary, allCheckPointWasteSummary} = this.state.trackWasteData;
-      if(this.state.currentMarkerID == ""){
+  _renderInfoEditFooter(){
+    const {showDefaultPanel, selectedTrackIndex, selectedZoneIndex, currentMarkerId, workData} = this.props;
+    if(showDefaultPanel && selectedTrackIndex >=0 ){
+      const {trackName, wasteCondition, workId} = this.props.track[selectedTrackIndex];
+      const {totalWasteSummary, allCheckpointWasteSummary} = this.props.trackWasteData;
+      if(currentMarkerId == ""){
+        //when no checkpoint is selected show all summary of selected track
         return(
-          <BottomSheetInfo title={trackName} data={totalWasteSummary.totalWasteSummary} dataPresent={true}/>
+          <BottomSheetInfo title={trackName} wasteCondition={wasteCondition} workId={workId} workData={workData.workSummary}
+          wasteData={totalWasteSummary}/>
         )
       }else{
-        const index = _.findIndex(allCheckPointWasteSummary,(s)=>{
-          return s.trackCheckPointRef == this.state.currentMarkerID;
+        //_.findIndex() return index of id if found else return -1 as index
+        const index = _.findIndex(allCheckpointWasteSummary,(s)=>{
+          return s.trackCheckpointRef == currentMarkerId;
         });
         if(index != -1){
           return(
-            <BottomSheetInfo title={trackName} data={allCheckPointWasteSummary[index].wasteSummary} dataPresent={true}/>
+            <BottomSheetInfo title={trackName} wasteCondition={wasteCondition} workData={workData.workSummary}
+            wasteData={allCheckpointWasteSummary[index].wasteSummary}/>
           )
         }else{
-          return(
-            <BottomSheetInfo title={trackName} dataPresent={false}/>
-          )
+          return(<BottomSheetInfo title={trackName}/>)
         }
       }
-    }else return null;
+    }else if(showDefaultPanel && selectedZoneIndex >=0){
+      //for zone infoEdit bottomsheet
+      const {zoneName, wasteCondition, workId} = this.props.zone[selectedZoneIndex];
+      const {totalWasteSummary} = this.props.zoneWasteData;
+      return(
+        <BottomSheetInfo title={zoneName} wasteCondition={wasteCondition} workId={workId} workData={workData.workSummary}
+        wasteData={totalWasteSummary}/>
+      )
+    }
   }
-
-  // Panel renderers
-  _renderPanel = () => {
-    if(this.state.showDefaultPanel){
+  _handleNameModalText = (text) => {
+    this.props.nameModalChanged(text);
+  }
+  nameModalObject(modalFor = ""){
+    if(this.props.nameModalVisible && modalFor!=""){
+      let title = "";
+      if(modalFor == "track"){
+        title = "Track Name";
+      }else if(modalFor == "zone"){
+        title = "Zone Name";
+      }
+      return(
+        <CustomModal 
+          visible = {this.props.nameModalVisible}
+          //toggleNameModal
+          onRequestClose = {() => this.props.toggleNameModal()}
+          onPressTouchableOpacity = {() => this.props.toggleNameModal()}
+          title = {title}
+          content = {
+            <TextInput
+              autoCorrect = {false}
+              keyboardType = "visible-password" underlineColorAndroid = "transparent"
+              style={{height:50, borderBottomWidth:1,
+                borderRadius:4, borderColor:colors.button, width:"80%", textAlignVertical:"bottom",fontSize:15}}
+              onChangeText={text => this._handleNameModalText(text)}
+              value = {this.props.nameModalValue} placeholder = {title}
+            />
+          }
+          footerContent1 = {<Button text="Cancel" buttonType="contained" onPress={() => this.props.cancelNameModal()}/>}
+          footerContent2 = {<Button text="Done" buttonType="contained" onPress={() => this._onPressDone(modalFor)}/>}
+        />
+      )
+    }
+  }
+  _renderPanel(){
+    if(this.props.showDefaultPanel){
       return(
         <View style={styles.defaultPanelStyle}>
-          <FAB style={styles.FABStyle}
-            option1 = {<Button text="Add zone" buttonType="contained" onPress={this._toggleZonePanel}/>}
-            option2 = {<Button text="Add track" buttonType="contained" onPress={this._toggleTrackPanel}/>}
+          <FAB 
+            option1 = {<Button text="Add zone" buttonType="contained" onPress={()=>this._toggleZonePanel()}/>}
+            option1Icon = {<MaterialIcon name="vector-polygon" size={24} color="rgba(255, 255, 255, 1)" style={{padding:6}}/>}
+            option2 = {<Button text="Add track" buttonType="contained" onPress={()=>this._toggleTrackPanel()}/>}
+            option2Icon = {<MaterialIcon name="vector-polyline" size={24} color="rgba(255, 255, 255, 1)" style={{padding:6}}/>}
           />
         </View>
       )
     }
-    if(this.state.showZonePanel){
+    if(this.props.showZonePanel){
       return(
         <MapEditPanel
           headerTitle = "Create Zone"
@@ -572,12 +701,12 @@ class ExploreMap extends Component {
           headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-right" color="#000" size={25}/>}
             onPress={() => this._onPressMoveTo("zone", "nameModal")}/>
           }
-          footer = {<Button text="Add zone point" buttonType="contained" onPress={this._onPressAddZonePoint}/>}
+          footer = {<Button text="Add zone point" buttonType="contained" onPress={()=>this._onPressAddZonePoint()}/>}
           modal = {this.nameModalObject("zone")}
         />
       )
     }
-    if(this.state.showTrackPanel){
+    if(this.props.showTrackPanel1){
       return(
         <MapEditPanel 
           headerTitle = "Create Track"
@@ -585,31 +714,31 @@ class ExploreMap extends Component {
               onPress={() => this._onPressCancel("track")}
             />}
           headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-right" color="#000" size={25}/>}
-              onPress={() => this._onPressMoveTo("trackPanel", "trackPanelState1")}
+              onPress={() => this._onPressMoveTo("trackPanel1", "trackPanel2")}
             />}
-          footer = {<Button text="Add track point" buttonType="contained" onPress={this._onPressAddTrackPoint}/>}
+          footer = {<Button text="Add track point" buttonType="contained" onPress={()=>this._onPressAddTrackPoint()}/>}
         />
       )
     }
-    if(this.state.showTrackPanelState1){
+    if(this.props.showTrackPanel2){
       return(
         <MapEditPanel 
           headerTitle = "Process checkpoint"
           headerLeft = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-left" color="#000" size={25}/>}
-              onPress={() => this._onPressMoveTo("trackPanelState1", "trackPanel")}
+              onPress={() => this._onPressMoveTo("trackPanel2", "trackPanel1")}
             />}
           headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-right" color="#000" size={25}/>}
-              onPress={() => this.setState({nameModalVisible:true})}
+              onPress={() => this.props.toggleNameModal()}
             />}
           footer = {
             <View style={{flex:1, flexDirection:"row"}}>
               <Slider 
                 style={{width:"60%"}} minimumValue = {50} maximumValue = {200} minimumTrackTintColor = {colors.button}
-                step = {50} onValueChange = {(i)=>this.setState({interval:i})} />
+                step = {50} value = {150} onValueChange = {(i) => this.props.intervalChanged(i)} />
               <View style = {{alignSelf:"baseline", width:40, borderRadius:4, borderColor:"black", marginHorizontal:5}}>
-                <Text style = {{flex:1, fontSize:15, padding:5}}>{this.state.interval}</Text>
+                <Text style = {{flex:1, fontSize:15, padding:5}}>{this.props.interval}</Text>
               </View>
-              <Button text="Process" buttonType="contained" onPress={this._onPressProcessCheckpoint}/>
+              <Button text="Process" buttonType="contained" onPress={() => this._onPressProcessCheckpoint()}/>
             </View>
           }
           modal = {this.nameModalObject("track")}
@@ -617,92 +746,14 @@ class ExploreMap extends Component {
       )
     }
   }
-  handleSearchQuery = (text) => {
-    const formatedQuery = text.toLowerCase();
-    const trackDataResult = _.filter(this.state.fullQueryTrack, td => {
-      return trackContains(td, formatedQuery);
-    });
-    const zoneDataResult = _.filter(this.state.fullQueryZone, zd => {
-    return zoneContains(zd, formatedQuery);
-    });
-    this.setState({queryTrack:trackDataResult, queryZone:zoneDataResult,
-      searchQuery:formatedQuery
-    }, () => this.makeRemoteRequest());
-  }
-  _renderSearchList = () => {
-    if(this.state.mapSearchFocused){
-      return(
-        <SearchModal
-          autoFocus = {true}
-          //toggleSearchBox
-          onRequestClose = {()=> this.setState({mapSearchFocused:false, mapSearchVisible:true})}
-          onChangeText = {text => this.handleSearchQuery(text)}
-          value = {this.state.searchQuery}
-          //toggleSearchBox
-          onPressBack = {()=> this.setState({mapSearchFocused:false, mapSearchVisible:true})}
-          onPressClear = {()=>this.setState({searchQuery:""})}
-          trackData = {this.state.queryTrack}
-          zoneData = {this.state.queryZone}
-        />
-      )
-    }
-  }
-  handleNameModalText(text){
-    this.setState({nameModalValue:text});
-  }
-  nameModalObject(modalFor){
-    if(this.state.nameModalVisible && modalFor=="track"){
-      return(
-        <CustomModal 
-          visible = {this.state.nameModalVisible}
-          //toggleNameModal
-          onRequestClose = {() => this.setState({nameModalVisible:false})}
-          onPressTouchableOpacity = {() => this.setState({nameModalVisible:false})}
-          title = "Track Name"
-          content = {
-            <TextInput
-              autoCorrect = {false}
-              keyboardType = "visible-password" underlineColorAndroid = "transparent"
-              style={{height:50, borderBottomWidth:1,
-                borderRadius:4, borderColor:colors.button, width:"80%", textAlignVertical:"bottom",fontSize:15}}
-              onChangeText={text => this.handleNameModalText(text)}
-              value = {this.state.nameModalValue} placeholder = "Track Name"
-            />
-          }
-          footerContent1 = {<Button text="Cancel" buttonType="contained" onPress={() => this.setState({ nameModalValue:"", nameModalVisible:false})}/>}
-          footerContent2 = {<Button text="Done" buttonType="contained" onPress={() => this._onPressDone("track")}/>}
-        />
-      )
-    }
-    if(this.state.nameModalVisible && modalFor == "zone"){
-      return(
-        <CustomModal 
-          visible = {this.state.nameModalVisible}
-          onRequestClose = {() => this.setState({nameModalVisible:false})}
-          onPressTouchableOpacity = {() => this.setState({nameModalVisible:false})}
-          title = "Zone Name"
-          content = {
-            <TextInput
-              autoCorrect = {false}
-              keyboardType = "visible-password" underlineColorAndroid = "transparent"
-              style={{height:50, borderBottomWidth:1,
-                borderRadius:4, borderColor:colors.button, width:"80%", textAlignVertical:"bottom",fontSize:15}}
-              onChangeText={text => this.handleNameModalText(text)}
-              value = {this.state.nameModalValue} placeholder = "Zone Name"
-            />
-          }
-          footerContent1 = {<Button text="Cancel" buttonType="contained" onPress={() => this.setState({ nameModalValue:"", nameModalVisible:false})}/>}
-          footerContent2 = {<Button text="Done" buttonType="contained" onPress={() => this._onPressDone("zone")}/>}
-        />
-      )
-    }
-  }
+
 
   // Main renderers
   render() {
     return (
       <View style={ styles.container}>
         <MapView.Animated
+          //ref = {this._mapViewRef}
           customMapStyle = {mapStyle}
           onPress = {this._onMapPress}
           //showsUserLocation
@@ -712,18 +763,26 @@ class ExploreMap extends Component {
           onRegionChangeComplete={ this._onRegionChangeComplete }
           style={styles.mapViewContainer }
         >
-            {this._renderAddZonePolygon()}
-            {this._renderAddZonePolygonMarkers()}
-            {this._renderZonePolygon()}
+            {/* on track panel */}
+            {this._renderAddTrack()}
+            {this._renderAddTrackMarkers()}
+            {this._renderProcessedCheckpoints()}
+            {/* on zone panel */}
+            {this._renderAddZone()}
+            {this._renderAddZoneMarkers()}
+            {/* on default panel */}
+            {this._renderTrack()}
+            {this._renderSelectedTrackCheckpoints()}
+            {this._renderHighlightOnSelectedCheckpoint()}
 
-            {this._renderAddTrackPolyline()}
-            {this._renderAddTrackPolylineMarkers()}
-            {this._renderTrackPolyline()}
-            {this._renderTrackCheckPoints()}
+            {this._renderZone()}
+            {this._renderSelectedZoneMarker()}
 
-            {this._renderSelectedTrackCheckPoints()}
+            {this._renderChipsQueryTrack()}
+            {this._renderChipsQueryZone()}
         </MapView.Animated>
         {this._renderDummySearchBox()}
+        {this._renderChipsFilterSearch()}
         {this._renderSearchList()}
         {this._renderChips()}
         <MaterialIcon name="crosshairs" color="#000" size={15} style={styles.crosshairIcon}/>
@@ -733,7 +792,6 @@ class ExploreMap extends Component {
     );
   }
 }
-
 
 
 const styles = StyleSheet.create({
@@ -751,11 +809,8 @@ const styles = StyleSheet.create({
   defaultPanelStyle:{
     position:"absolute",
     alignSelf:"flex-end",
-    top:"80%"
-  },
-  FABStyle:{
-    //alignSelf:"flex-end",
-    marginRight:10,
+    bottom:40,
+    right:20,
   },
   crosshairIcon:{
     position:"absolute",
@@ -792,7 +847,13 @@ const mapStateToProps = (state) => {
     currentMarkerId,
     selectedTrackIndex,
     selectedZoneIndex,
-    trackWasteData} = state.explore;
+    workData,
+    trackWasteData,
+    zoneWasteData,
+    selectedChipsId,
+    chipsFilteredTrack,
+    chipsFilteredZone
+  } = state.explore;
     return {
       categories,
       region,
@@ -820,10 +881,17 @@ const mapStateToProps = (state) => {
       currentMarkerId,
       selectedTrackIndex,
       selectedZoneIndex,
-      trackWasteData
+      workData,
+      trackWasteData,
+      zoneWasteData,
+      selectedChipsId,
+      chipsFilteredTrack,
+      chipsFilteredZone
     }
 }
+const mapDispatchToProps = (dispatch)=>{
+  return ({...bindActionCreators(exploreActions, dispatch)})
+};
 
-export default connect (mapStateToProps, {
-  exploreActions
-})(ExploreMap)
+export default connect (mapStateToProps, mapDispatchToProps
+)(ExploreMap)
