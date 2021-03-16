@@ -3,7 +3,6 @@
     "identifier": "1594390683618.0.8168032102181171",
     "trackRef": "1594548245601.0.14285883746076822",
     "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.14940356639446262",
     "category": "metal-scraps",
     "amount": 6
   },
@@ -11,7 +10,6 @@
     "identifier": "1594390684826.0.48340886211694123",
     "trackRef": "1594548355362.0.8542844882567979",
     "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.4144509275531779",
     "category": "hazard",
     "amount": 6
   },
@@ -19,7 +17,6 @@
     "identifier": "1594390685883.0.7371966225798923",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.42702818471069437",
     "category": "bottle",
     "amount": 5
   },
@@ -27,7 +24,6 @@
     "identifier": "1594390686999.0.6183531164068352",
     "trackRef": "1594548245601.0.14285883746076822",
     "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.04542732719854681",
     "category": "organic",
     "amount": 38
   },
@@ -35,7 +31,6 @@
     "identifier": "1594390688252.0.39801571254730006",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.035432187722544084",
     "category": "bottle",
     "amount": 39
   },
@@ -43,7 +38,6 @@
     "identifier": "1594390689515.0.9466320210509146",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.035432187722544084",
     "category": "hazard",
     "amount": 14
   },
@@ -51,7 +45,6 @@
     "identifier": "1594390690782.0.1742965544248768",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.035432187722544084",
     "category": "bottle",
     "amount": 35
   },
@@ -59,7 +52,6 @@
     "identifier": "1594390693833.0.6831188355292807",
     "trackRef": "1594548355362.0.8542844882567979",
     "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9459891598219663",
     "category": "hazard",
     "amount": 20
   },
@@ -67,7 +59,6 @@
     "identifier": "1594390694920.0.506247551143706",
     "trackRef": "1594548336855.0.5769298874538029",
     "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.3821859760949884",
     "category": "organic",
     "amount": 33
   },
@@ -75,7 +66,6 @@
     "identifier": "1594390696101.0.14512642984956559",
     "trackRef": "1594548245601.0.14285883746076822",
     "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.7125208378911728",
     "category": "bottle",
     "amount": 11
   },
@@ -83,7 +73,6 @@
     "identifier": "1594390697069.0.9096156179552146",
     "trackRef": "1594548355362.0.8542844882567979",
     "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.1536362018857712",
     "category": "organic",
     "amount": 11
   },
@@ -91,7 +80,6 @@
     "identifier": "1594390698137.0.8461178667069899",
     "trackRef": "1594548355362.0.8542844882567979",
     "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9271119108836973",
     "category": "hazard",
     "amount": 8
   },
@@ -99,7 +87,6 @@
     "identifier": "1594390699419.0.7974261004806785",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.6679123121218484",
     "category": "organic",
     "amount": 21
   },
@@ -107,7 +94,6 @@
     "identifier": "1594390700971.0.6771079012087621",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.9023347679805852",
     "category": "organic",
     "amount": 35
   },
@@ -115,7 +101,6 @@
     "identifier": "1594390703446.0.9140654774689417",
     "trackRef": "1594548336855.0.5769298874538029",
     "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.06254226767761695",
     "category": "hazard",
     "amount": 20
   },
@@ -123,7 +108,6 @@
     "identifier": "1594390704909.0.9932314984238177",
     "trackRef": "1594548299639.0.22278581558056487",
     "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.18920550977212147",
     "category": "hazard",
     "amount": 42
   },
@@ -131,7 +115,6 @@
     "identifier": "1594390706105.0.9391186900125326",
     "trackRef": "1594548245601.0.14285883746076822",
     "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.14940356639446262",
     "category": "bottle",
     "amount": 48
   },
@@ -139,328 +122,7 @@
     "identifier": "1594390707372.0.6193055066681679",
     "trackRef": "1594548355362.0.8542844882567979",
     "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9271119108836973",
     "category": "organic",
     "amount": 5
-  },
-  {
-    "identifier": "1594390708506.0.37005185816745334",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.7125208378911728",
-    "category": "bottle",
-    "amount": 45
-  },
-  {
-    "identifier": "1594390709657.0.8517569708101923",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.23273932827860477",
-    "category": "organic",
-    "amount": 32
-  },
-  {
-    "identifier": "1594390710608.0.5207641290857392",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.0936929405577902",
-    "category": "bottle",
-    "amount": 31
-  },
-  {
-    "identifier": "1594390712177.0.4711532331768702",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.6749073631727429",
-    "category": "hazard",
-    "amount": 37
-  },
-  {
-    "identifier": "1594390713959.0.9378691221346276",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.5789604965274873",
-    "category": "metal-scraps",
-    "amount": 27
-  },
-  {
-    "identifier": "1594390715859.0.8086241923597176",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.42702818471069437",
-    "category": "metal-scraps",
-    "amount": 49
-  },
-  {
-    "identifier": "1594390717010.0.07276085747034788",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.6749073631727429",
-    "category": "organic",
-    "amount": 19
-  },
-  {
-    "identifier": "1594390717996.0.30179566057312",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9459891598219663",
-    "category": "hazard",
-    "amount": 49
-  },
-  {
-    "identifier": "1594390719081.0.2506486611230977",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.3889577957532617",
-    "category": "hazard",
-    "amount": 15
-  },
-  {
-    "identifier": "1594390719986.0.45583403393715105",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.47064445757182516",
-    "category": "metal-scraps",
-    "amount": 37
-  },
-  {
-    "identifier": "1594390720979.0.019991218484728956",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.14940356639446262",
-    "category": "metal-scraps",
-    "amount": 17
-  },
-  {
-    "identifier": "1594390721865.0.5582114101925574",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.6630369119410198",
-    "category": "hazard",
-    "amount": 18
-  },
-  {
-    "identifier": "1594390724363.0.04487739887842612",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.1851742608217849",
-    "category": "metal-scraps",
-    "amount": 16
-  },
-  {
-    "identifier": "1594390725337.0.907654945947117",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.6630369119410198",
-    "category": "metal-scraps",
-    "amount": 26
-  },
-  {
-    "identifier": "1594390726149.0.355503410127754",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9812547800487713",
-    "category": "organic",
-    "amount": 15
-  },
-  {
-    "identifier": "1594390727017.0.09118484271454863",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.42702818471069437",
-    "category": "bottle",
-    "amount": 14
-  },
-  {
-    "identifier": "1594390729401.0.47991173042438195",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9812547800487713",
-    "category": "bottle",
-    "amount": 12
-  },
-  {
-    "identifier": "1594390730599.0.5537795328482814",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.921492959787405",
-    "category": "metal-scraps",
-    "amount": 14
-  },
-  {
-    "identifier": "1594390731584.0.7036156422613608",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.9463808190850868",
-    "category": "bottle",
-    "amount": 41
-  },
-  {
-    "identifier": "1594390732417.0.5260842192600396",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.04542732719854681",
-    "category": "hazard",
-    "amount": 37
-  },
-  {
-    "identifier": "1594390734635.0.07256135814382247",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.4144509275531779",
-    "category": "bottle",
-    "amount": 41
-  },
-  {
-    "identifier": "1594390735419.0.31213113197449394",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.08429190969370448",
-    "category": "organic",
-    "amount": 35
-  },
-  {
-    "identifier": "1594390736186.0.9734750283335439",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.23693973943494062",
-    "category": "hazard",
-    "amount": 25
-  },
-  {
-    "identifier": "1594390738135.0.8241047131232769",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.9023347679805852",
-    "category": "hazard",
-    "amount": 31
-  },
-  {
-    "identifier": "1594390739106.0.7680083490696109",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.9377047608658691",
-    "category": "organic",
-    "amount": 5
-  },
-  {
-    "identifier": "1594390740104.0.08689559937747804",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.40084209423848105",
-    "category": "metal-scraps",
-    "amount": 35
-  },
-  {
-    "identifier": "1594390741910.0.41379848020942456",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.9271119108836973",
-    "category": "organic",
-    "amount": 35
-  },
-  {
-    "identifier": "1594390742438.0.4091937841867488",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.8014978897664267",
-    "category": "hazard",
-    "amount": 20
-  },
-  {
-    "identifier": "1594390744692.0.9520137513030116",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.18920550977212147",
-    "category": "organic",
-    "amount": 13
-  },
-  {
-    "identifier": "1594390746005.0.7927622676372899",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.7543273959208753",
-    "category": "bottle",
-    "amount": 13
-  },
-  {
-    "identifier": "1594390746941.0.49477145141270207",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.3821859760949884",
-    "category": "organic",
-    "amount": 22
-  },
-  {
-    "identifier": "1594390747805.0.01673324497278461",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.921492959787405",
-    "category": "organic",
-    "amount": 50
-  },
-  {
-    "identifier": "1594390748639.0.7663192574971531",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.32282849282389137",
-    "category": "metal-scraps",
-    "amount": 43
-  },
-  {
-    "identifier": "1594390749490.0.11998513450967219",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.06254226767761695",
-    "category": "bottle",
-    "amount": 46
-  },
-  {
-    "identifier": "1594390751557.0.8658018634627701",
-    "trackRef": "1594548245601.0.14285883746076822",
-    "trackName": "lamachaur track",
-    "trackCheckpointRef": "1594548230664.0.9463808190850868",
-    "category": "metal-scraps",
-    "amount": 26
-  },
-  {
-    "identifier": "1594390752707.0.9872424522787403",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.7359567582641168",
-    "category": "organic",
-    "amount": 39
-  },
-  {
-    "identifier": "1594390753791.0.5603694816111789",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.1536362018857712",
-    "category": "organic",
-    "amount": 50
-  },
-  {
-    "identifier": "1594390755744.0.36536322918906217",
-    "trackRef": "1594548299639.0.22278581558056487",
-    "trackName": "batulechaur track",
-    "trackCheckpointRef": "1594548282866.0.18920550977212147",
-    "category": "hazard",
-    "amount": 36
-  },
-  {
-    "identifier": "1594390757329.0.9681805920142047",
-    "trackRef": "1594548336855.0.5769298874538029",
-    "trackName": "lamachaur track 2",
-    "trackCheckpointRef": "1594548317850.0.40084209423848105",
-    "category": "organic",
-    "amount": 8
-  },
-  {
-    "identifier": "1594390758698.0.5078110989014032",
-    "trackRef": "1594548355362.0.8542844882567979",
-    "trackName": "bagar track 1",
-    "trackCheckpointRef": "1594548345942.0.5789604965274873",
-    "category": "bottle",
-    "amount": 34
   }
 ]

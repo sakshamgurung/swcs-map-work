@@ -51,8 +51,7 @@ const ListItem = ({onPressItem, icon, distance, title, desc, id}) => {
     </TouchableOpacity>
   )
 }
-export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressTrack, 
-  onPressZone, onChangeText, value, trackData, zoneData}) => {
+export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressTrack, onChangeText, value, trackData}) => {
     return (
     <Modal
       visible = {true}
@@ -87,17 +86,6 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressT
                   title = {td.trackName}
                   desc = {td.trackName}
                   onPressItem = {onPressTrack}
-                />
-              )}
-              {zoneData.map((zd)=>
-                <ListItem
-                  key = {zd.zoneId}
-                  id = {zd.zoneId}
-                  icon = {<MaterialIcon name="vector-polygon" size={20} color="rgba(72, 162, 247,1)"/>}
-                  distance = {null}
-                  title = {zd.zoneName}
-                  desc = {zd.zoneName}
-                  onPressItem = {onPressZone}
                 />
               )}
             </ScrollView>

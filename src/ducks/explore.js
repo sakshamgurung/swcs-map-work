@@ -36,18 +36,14 @@ export const types = {
   
   SHOW_DEFAULT_PANEL:"explore/showDefalutPanel",
   SHOW_TRACK_PANEL_1:"explore/showTrackPanel1",
-  SHOW_TRACK_PANEL_2:"explore/showTrackPanel2",
   SHOW_ZONE_PANEL:"explore/showZonePanel",
   
-  CANCEL_TRACK_PANEL_2:"explore/cancelTrackPanel2",
-  DONE_TRACK_PANEL_2:"explore/doneTrackPanel2",
+  CANCEL_TRACK_PANEL_1:"explore/cancelTrackPanel1",
+  DONE_TRACK_PANEL_1:"explore/doneTrackPanel1",
   CANCEL_ZONE_PANEL:"explore/cancelZonePanel",
   DONE_ZONE_PANEL:"explore/doneZonePanel",
 
-
-  TOGGLE_NAME_MODAL:"explore/toggleNameModal",
   TOGGLE_MAP_SEARCH:"explore/toggleMapSearch",
-  TOGGLE_TRACK_PANELS:"explore/toggleTrackPanels",
   CANCEL_NAME_MODAL:"explore/cancelNameModal",
 
   ADD_ZONE_POINT:"explore/addZonePoint",
@@ -57,8 +53,6 @@ export const types = {
   ADD_TRACK_POINT:"explore/addTrackPoint",
   DELETE_TRACK_POINT:"explore/deleteTrackPoint",
   ADD_TRACK:"explore/addTrack",
-  CHECKPOINTS_PROCESSED:"explore/checkpointsProcessed",
-  INTERVAL_CHANGED:"explore/intervalChanged",
 }
 //initial states
 export const initialState = {
@@ -94,17 +88,12 @@ export const initialState = {
   showDefaultPanel:true,
   showZonePanel:false,
   showTrackPanel1:false,
-  showTrackPanel2:false,
   nameModalVisible:false,
   nameModalValue:"",
   zone:[],
   zonePoints:[],
-  queryZone:[],
-  fullQueryZone:[],
   track:[],
   trackPoints:[],
-  trackCheckpoints:[],
-  interval:150,
   queryTrack:[],
   fullQueryTrack:[],
   currentMarkerId:"",
@@ -112,10 +101,8 @@ export const initialState = {
   selectedZoneIndex:-1,
   workData:{},
   trackWasteData:{},
-  zoneWasteData:{},
   selectedChipsId:"",
-  chipsFilteredTrack:{},
-  chipsFilteredZone:{}
+  chipsFilteredTrack:{}
 }
 //Reducers
 export default function reducer(state = initialState, action){
@@ -147,19 +134,18 @@ export default function reducer(state = initialState, action){
       return {...state, selectedTrackIndex:action.payload};
     }
     case types.ZONE_SELECTED:{
-      return {...state, selectedZoneIndex:action.payload};
+      return {...state, selectedZoneIndex:action.payload, selectedTrackIndex:-1, currentMarkerId:""};
     }
     //chips filetered geo objects
     case types.CHIPS_SELECTED:{
-      const {resultTrack, resultZone} = action.payload.chipsFilteredGeoObject;
+      const {resultTrack} = action.payload.chipsFilteredGeoObject;
       const {selectedChipsId} = action.payload;
-      return {...state, selectedChipsId, chipsFilteredTrack:resultTrack, chipsFilteredZone:resultZone,
-      }
+      return {...state, selectedChipsId, chipsFilteredTrack:resultTrack}
     }
     //dismiss
     case types.DISMISS_SELECTED_GEO_OBJECT:{
       return {...state, selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerId:"", chipsFilteredTrack:{},
-      chipsFilteredZone:{}, selectedChipsId:""};
+      selectedChipsId:""};
     }
     //loading geo objects
     case types.LOAD_GEO_OBJECTS:{
@@ -168,8 +154,7 @@ export default function reducer(state = initialState, action){
     case types.LOAD_GEO_OBJECTS_SUCCESS:{
       const {trackDataResult, zoneDataResult} = action.payload;
       return {...state, track:trackDataResult, zone:zoneDataResult,
-        queryTrack:trackDataResult, queryZone:zoneDataResult,
-        fullQueryTrack:trackDataResult, fullQueryZone:zoneDataResult
+        queryTrack:trackDataResult, fullQueryTrack:trackDataResult
       };
     }
     case types.LOAD_GEO_OBJECTS_FAILURE:{
@@ -183,8 +168,6 @@ export default function reducer(state = initialState, action){
     case types.LOAD_GEO_OBJECTS_WORK_SUCCESS:{
       const {response, selectedGeoObjectIndex, workDataOf} = action.payload;
       if(workDataOf == "track"){
-        return {...state, workData:response};
-      }else if(workDataOf == "zone") {
         return {...state, workData:response};
       }
     }
@@ -200,9 +183,6 @@ export default function reducer(state = initialState, action){
       if(wasteDataOf == "track"){
         return {...state, trackWasteData:response, selectedTrackIndex:selectedGeoObjectIndex,
           currentMarkerId:"", selectedZoneIndex:-1};
-      }else if(wasteDataOf == "zone") {
-        return {...state, zoneWasteData:response, selectedZoneIndex:selectedGeoObjectIndex,
-          selectedTrackIndex:-1};
       }
     }
     case types.LOAD_GEO_OBJECTS_WASTE_FAILURE:{
@@ -222,9 +202,6 @@ export default function reducer(state = initialState, action){
     case types.SHOW_TRACK_PANEL_1:{
       return {...state, showDefaultPanel:false, mapSearchVisible:false, 
         selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerId:"", showTrackPanel1:true};
-    }
-    case types.SHOW_TRACK_PANEL_2:{
-      return {...state, showTrackPanel1:false, showTrackPanel2:true};
     }
     
     //new zone reducers
@@ -255,24 +232,13 @@ export default function reducer(state = initialState, action){
       trackPoints.splice(action.payload,1);
       return {...state, trackPoints};
     }
-    case types.INTERVAL_CHANGED:{
-      return {...state, interval:action.payload};
+    case types.DONE_TRACK_PANEL_1:{
+      return {...state, track:action.payload, trackPoints:[], currentMarkerId:"", nameModalValue:"", 
+      nameModalVisible:false, showTrackPanel1:false, showDefaultPanel:true, mapSearchVisible:true};
     }
-    case types.CHECKPOINTS_PROCESSED:{
-      return {...state, trackCheckpoints:action.payload}
-    }
-    case types.DONE_TRACK_PANEL_2:{
-      return {...state, track:action.payload, trackPoints:[],trackCheckpoints:[], interval:50, currentMarkerId:"",
-      nameModalValue:"", nameModalVisible:false, showTrackPanel2:false, showDefaultPanel:true,
-      mapSearchVisible:true};
-    }
-    case types.CANCEL_TRACK_PANEL_2:{
-      return {...state, trackPoints:[], trackCheckpoints:[], interval:50, showTrackPanel1:false, 
-        showTrackPanel2:false, currentMarkerId:"", showDefaultPanel:true, mapSearchVisible:true};
-    }
-    case types.TOGGLE_TRACK_PANELS:{
-      return {...state, showTrackPanel1:!state.showTrackPanel1, showTrackPanel2:!state.showTrackPanel2, 
-        trackCheckpoints:[], interval:50}
+    case types.CANCEL_TRACK_PANEL_1:{
+      return {...state, trackPoints:[], showTrackPanel1:false,currentMarkerId:"", 
+      showDefaultPanel:true, mapSearchVisible:true};
     }
     //search box reducers
     case types.TOGGLE_SEARCH_BOX:{
@@ -281,9 +247,8 @@ export default function reducer(state = initialState, action){
     }
 
     case types.QUERY_CHANGED:{
-      const {trackDataResult, zoneDataResult, formatedQuery} = action.payload;
-      return {...state, queryTrack:trackDataResult,
-        queryZone:zoneDataResult, searchQuery:formatedQuery}
+      const {trackDataResult, formatedQuery} = action.payload;
+      return {...state, queryTrack:trackDataResult, searchQuery:formatedQuery}
     }
     
     //name modal reducers
@@ -405,29 +370,20 @@ const dragTrackMarker = (trackPoints) => {
 const deleteTrackPoint = (removeIndex) => {
   return ({type:types.DELETE_TRACK_POINT, payload:removeIndex});
 }
-const intervalChanged = (interval) => {
-  return ({type:types.INTERVAL_CHANGED, payload:interval});
-}
-const checkpointsProcessed = (trackCheckpoints) => {
-  return ({type:types.CHECKPOINTS_PROCESSED, payload:trackCheckpoints});
-}
-const doneTrackPanel2 = (track) => {
+const doneTrackPanel1 = (track) => {
   //make api call to save new track
-  return({type:types.DONE_TRACK_PANEL_2, payload:track});
+  return({type:types.DONE_TRACK_PANEL_1, payload:track});
 }
-const cancelTrackPanel2 = () => {
-  return({type:types.CANCEL_TRACK_PANEL_2});
-}
-const toggleTrackPanels = () => {
-  return({type:types.TOGGLE_TRACK_PANELS})
+const cancelTrackPanel1 = () => {
+  return({type:types.CANCEL_TRACK_PANEL_1});
 }
 
 //search box action creator
 const toggleSearchBox = () => {
   return ({type:types.TOGGLE_SEARCH_BOX});
 }
-const queryChanged = (trackDataResult, zoneDataResult, formatedQuery) => {
-  return ({type:types.QUERY_CHANGED, payload:{trackDataResult, zoneDataResult, formatedQuery}});
+const queryChanged = (trackDataResult, formatedQuery) => {
+  return ({type:types.QUERY_CHANGED, payload:{trackDataResult, formatedQuery}});
 }
 
 //name modal action creator
@@ -441,7 +397,9 @@ const nameModalChanged = (geoObjectName) => {
   return ({type:types.NAME_MODAL_CHANGED, payload:geoObjectName})
 }
 
-//thunk functions
+/**
+ * thunk functions
+ * */
 const thunkLoadGeoObjects = (searchQuery) => {
   return (dispatch) => {
     //dispatch(loadGeoObjects());
@@ -493,9 +451,9 @@ const thunkLoadGeoObjectWaste = (geoObjectId, selectedGeoObjectIndex, wasteDataO
   }
 }
 
-const thunkQueryChanged = (trackDataResult, zoneDataResult, formatedQuery) => {
+const thunkQueryChanged = (trackDataResult, formatedQuery) => {
   return (dispatch) => {
-    dispatch(queryChanged(trackDataResult, zoneDataResult, formatedQuery));
+    dispatch(queryChanged(trackDataResult, formatedQuery));
     return new Promise((resolve, reject) => resolve());
   }
 }
@@ -514,6 +472,6 @@ export const actions = {
   loadGeoObjectsWaste, loadGeoObjectsWasteSuccess, loadGeoObjectsWasteFailure, thunkLoadGeoObjectWaste,
   togglePanel, toggleNameModal, cancelNameModal, nameModalChanged,
   addZonePoint, deleteZonePoint, dragZoneMarker, doneZonePanel, cancelZonePanel,
-  addTrackPoint, deleteTrackPoint, dragTrackMarker, intervalChanged, checkpointsProcessed, doneTrackPanel2, cancelTrackPanel2, toggleTrackPanels,
+  addTrackPoint, deleteTrackPoint, dragTrackMarker, doneTrackPanel1, cancelTrackPanel1,
   toggleSearchBox, thunkToggleSearchBox, queryChanged, thunkQueryChanged
 }

@@ -2,7 +2,6 @@ const _ = require('lodash');
 const trackData = require('./mockTrack.json');
 const zoneData = require('./mockZone.json');
 const trackWasteData = require('./mockTrackWaste.json');
-const zoneWasteData = require('./mockZoneWaste.json');
 const workData  = require("./mockWork.json");
 const collectorData = require("./mockCollector.json");
 const vehicleData = require("./mockVehicle.json");
@@ -13,13 +12,9 @@ export const trackContains  = (td, query) => {
   }
   return false;
 }
-export const zoneContains  = (zd, query) => {
-  if(_.includes(zd.zoneName, query) ){
-    return true;
-  }
-  return false;
-}
-
+/**
+ * get all geoObjects
+ */
 export const getObjects = (query = "") => {
   return new Promise((resolve, reject) => {
     if (query.length === 0) {
@@ -31,37 +26,29 @@ export const getObjects = (query = "") => {
       const trackDataResult = _.filter(trackData, td => {
         return trackContains(td, formattedQuery);
       });
-      const zoneDataResult = _.filter(zoneData, zd => {
-        return zoneContains(zd, formattedQuery);
-      });
-      resolve({trackDataResult,zoneDataResult});
+      resolve({trackDataResult});
     }
   });
 }
 
+/**
+ * chips filter
+ */
 export const chipsFilter = (type, query) => {
   let geoObjectResult = {};
   let resultTrack = [];
-  let resultZone = [];
   if(type == "waste condition"){
     const fullTrackData = processChipsByWasteConditon(trackData, query);
-    const fullZoneData = processChipsByWasteConditon(zoneData, query);
     if(fullTrackData.length != 0){
       fullTrackData.map((ftd) => {
         const {trackId, trackPoints} = ftd;
         resultTrack.push({trackId, trackPoints});
       });
     }
-    if(fullZoneData.length != 0){
-      fullZoneData.map((fzd) => {
-        const {zoneId, zonePoints} = fzd;
-        resultZone.push({zoneId, zonePoints});
-      });
-    }
+
   }else if(type == "work status"){
     if(query == "no work"){
       resultTrack = [...resultTrack, ...trackContainsWorkId(trackData, "no work")];
-      resultZone = [...resultZone, ...zoneContainsWorkId(zoneData, "no work")];
     }else{
       const fullWorkData = _.filter(workData, (wd) => {
         if(query == wd.workStatus){
@@ -79,17 +66,16 @@ export const chipsFilter = (type, query) => {
       if(resultWorkId.length != 0){
         resultWorkId.map((wid) => {
           resultTrack = [...resultTrack, ...trackContainsWorkId(trackData, wid)];
-          resultZone = [...resultZone, ...zoneContainsWorkId(zoneData, wid)];
         });
       }
     }
   }
   geoObjectResult["resultTrack"] = resultTrack;
-  geoObjectResult["resultZone"] = resultZone;
   return new Promise((resolve, reject) => {
     resolve(geoObjectResult);
   });
 }
+
 function processChipsByWasteConditon(geoObjectData, query){
   const fullData = _.filter(geoObjectData, (god) => {
     if(_.includes(god.wasteCondition, query)){
@@ -99,6 +85,7 @@ function processChipsByWasteConditon(geoObjectData, query){
   });
   return fullData;
 }
+
 function trackContainsWorkId(geoObjectData, query){
   const fullData = _.filter(geoObjectData, (god)=>{
     if(_.includes(god.workId, query)){
@@ -115,23 +102,10 @@ function trackContainsWorkId(geoObjectData, query){
   }
   return resultGeoObjectId;
 }
-function zoneContainsWorkId(geoObjectData, query){
-  const fullData = _.filter(geoObjectData, (god)=>{
-    if(_.includes(god.workId, query)){
-      return true;
-    }
-    return false;
-  });
-  const resultGeoObjectId = [];
-  if(fullData.length != 0){
-    fullData.map((fd)=>{
-      const {zoneId, zonePoints} = fd;
-      resultGeoObjectId.push({zoneId, zonePoints});
-    });
-  }
-  return resultGeoObjectId;
-}
 
+/**
+ * work filter
+ */
 export const getWorkData = ( geoObjectId, workDataOf, infoType) => {
   if(infoType == "summary"){
     let fullWorkData = []; 
@@ -149,17 +123,8 @@ export const getWorkData = ( geoObjectId, workDataOf, infoType) => {
         });
         return isGeoObjectPresent;
       });
-    }else if(workDataOf == "zone"){
-      fullWorkData = _.filter(workData, (work) => {
-        let isGeoObjectPresent = false;
-        work.geoObjectZoneId.map((id)=>{
-          if(id == geoObjectId){
-            isGeoObjectPresent = true;
-          };
-        });
-        return isGeoObjectPresent;
-      });
     }
+
     if(fullWorkData.length != 0){
       workSummary = processWorkData(fullWorkData[0], infoType);
       collectorSummary = processCollectorData(collectorData, workSummary.collectorId, infoType);
@@ -171,6 +136,7 @@ export const getWorkData = ( geoObjectId, workDataOf, infoType) => {
     });
   }
 }
+
 function processWorkData(fullWorkData, infoType){
   if(infoType == "summary"){
     const {id, collectorId, vehicleId, workType, workStatus} = fullWorkData;
@@ -178,6 +144,7 @@ function processWorkData(fullWorkData, infoType){
     return workSummary;
   }
 }
+
 function processCollectorData(collectorData, collectorId, infoType){
   if(infoType == "summary"){
     const fullCollectorData = _.filter(collectorData, (c)=>{
@@ -195,6 +162,7 @@ function processCollectorData(collectorData, collectorId, infoType){
     return collectorSummary;
   }
 }
+
 function processVehicleData(vehicleData, vehicleId, infoType){
   if(infoType == "summary"){
     const fullVehicleData = _.filter(vehicleData, (c)=>{
@@ -212,14 +180,15 @@ function processVehicleData(vehicleData, vehicleId, infoType){
     return vehicleSummary;
   }
 }
+
+/**
+ * waste filter
+ */
 export const getWasteData = async(wasteDataOf, ref) => {
   let result = null;
   switch(wasteDataOf){
     case "track":
       result = await getTrackWasteData(ref);
-      return result;
-    case "zone":
-      result = await getZoneWasteData(ref);
       return result;
     default:
       return result;
@@ -230,23 +199,13 @@ const getTrackWasteData = (trackRef) => {
   //filtering array by track Ref
   filterByTrackID = _.filter(trackWasteData, (t) => {return t.trackRef == trackRef});
   //getting total waste amount by category from given track
-  const totalWasteSummary = trackWasteDataProcessor(filterByTrackID, "totalWasteSummary");
-  //array for holding references to all occupied checkPoints of a given track
-  let checkpointReferences = [];
-  //extracting track checkPoint references
-  filterByTrackID.map((t) => checkpointReferences.push(t.trackCheckpointRef));
-  //removing duplicate checkPoint references
-  checkpointReferences = _.clone(_.uniq(checkpointReferences));
-  //getting waste summary of all occupied checkPoint of a given track
-  const allCheckpointWasteSummary = trackWasteDataProcessor(filterByTrackID, "allCheckpointWasteSummary", checkpointReferences);
+  const totalWasteSummary = trackWasteDataProcessor(filterByTrackID);
   return new Promise((resolve, reject) => {
-    resolve({totalWasteSummary, allCheckpointWasteSummary});
+    resolve({totalWasteSummary});
   });
 }
 
-const trackWasteDataProcessor = (wasteData, ref, checkpointReferences = []) => {
-  //total Waste Summary
-  if(ref == "totalWasteSummary"){
+const trackWasteDataProcessor = (wasteData) => {
     let data = _.cloneDeep(wasteData);
     let categories = [];
     let catWithAmount = {};
@@ -261,75 +220,4 @@ const trackWasteDataProcessor = (wasteData, ref, checkpointReferences = []) => {
       catWithAmount[d.category] += d.amount;
     });
     return catWithAmount;
-
-  }else if(ref == "allCheckpointWasteSummary" && checkpointReferences.length != 0){
-    const allCheckpointWasteSummary = [];
-    checkpointReferences.map((cpRef) => {
-      const temp = _.cloneDeep(wasteData);
-      let data = _.filter(temp, (t) => {return t.trackCheckpointRef == cpRef});
-      //console.log("data from trackWasteDataProcessor: ",data);
-      let categories = [];
-      let catWithAmount = {};
-      let result = {trackCheckpointRef:cpRef};
-      //extracting categories
-      data.map((d) => categories.push(d.category));
-      //removing duplicate categories
-      categories = _.cloneDeep(_.uniq(categories));
-      //creating array with categories and amount
-      categories.map((c) => {catWithAmount[c] = 0});
-      //summing up amount of same category
-      data.map((d) => {
-        let index = d.category;
-        catWithAmount[index] += d.amount;
-      });
-      result.wasteSummary = catWithAmount;
-      allCheckpointWasteSummary.push(result);
-    });
-    return allCheckpointWasteSummary;
-  }
 }
-
-const getZoneWasteData = (zoneRef) => {
-  //filtering array by zone Ref
-  filterByZoneID = _.filter(zoneWasteData,(z) => {return z.zoneRef == zoneRef});
-  //getting total waste amount by category from given zone
-  const totalWasteSummary = zoneWasteDataProcessor(filterByZoneID, "totalWasteSummary");  
-  return new Promise((resolve, reject) => {
-    resolve({totalWasteSummary});
-  });
-}
-
-const zoneWasteDataProcessor = (wasteData, ref) => {
-  //total Waste Summary
-  if(ref == "totalWasteSummary"){
-    let data = _.cloneDeep(wasteData);
-    let categories = [];
-    let catWithAmount = {};
-    //extracting categories
-    data.map((d) => categories.push(d.category));
-    //removing duplicate categories
-    categories = _.clone(_.uniq(categories));
-    //creating array with categories and amount
-    categories.map((c) => {catWithAmount[c] = 0});
-    //summing up amount of same category
-    data.map((d) => {
-      let index = d.category;
-      catWithAmount[index] += d.amount;
-    });
-    return catWithAmount;
-  }
-}
-
-
-// const main = async() => {
-//   let result = null;
-//   let testData = [{wasteDataOf:'track',ref:'1594548355362.0.8542844882567979'},{wasteDataOf:'zone',ref:'1594548407730.0.0666919222900284'}];
-//   for(let i=0; i<testData.length; i++){
-//     result = await getWasteData(testData[i].wasteDataOf,testData[i].ref);
-//     const {totalWasteSummary, allCheckpointWasteSummary} = result;
-//     console.log("Total waste summary : ",totalWasteSummary);
-//     console.log("All checkpoint waste summary: ",allCheckpointWasteSummary);
-//   }
-// }
-
-// main();

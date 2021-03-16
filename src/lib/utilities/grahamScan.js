@@ -1,5 +1,5 @@
 var _ = require('lodash');
-function convexHull(points) {
+export function convexHull(points) {
 	const S = points.splice(0);
   const P = sortPoints(S);
 	const OMEGA = [];
@@ -23,7 +23,7 @@ function convexHull(points) {
   }
 	return OMEGA;
 }
-function sortPoints(S){
+export function sortPoints(S){
 	const P0 = {latitude:0,longitude:0};
 	P0.longitude = Math.min.apply(null,S.map(p => p.longitude));
 	const longitudePoints = S.filter(p=>p.longitude === P0.longitude);
@@ -47,5 +47,3 @@ function distCompare(P, A, B){
   const distBP = Math.pow(P.latitude - B.latitude, 2) + Math.pow(P.longitude - B.longitude, 2);
   return distAP - distBP;
 }
-
-export default convexHull;
