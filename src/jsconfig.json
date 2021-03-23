@@ -2,17 +2,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths":{
+      "components/*":["./components/*"],
       "lib/*":["./lib/*"],
-      "assets/*":["./lib/assets/*"],
-      "components/*":["./lib/components/*"],
-      "res/*":["./lib/res/*"],
-      "utilities/*":["./lib/utilities/*"],
-      "ducks/*":["./ducks/*"],
-      "store/*":["./store/*"],
-      "actions/*":["./store/actions/*"],
-      "reducers/*":["./store/reducers/*"],
       "mock/*":["./mock/*"],
       "screens/*":["./screens/*"],
+      "store/*":["./store/*"],
+      "utilities/*":["./utilities/*"],
     }
   }
 }

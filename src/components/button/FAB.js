@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native'
 import {colors, shadow} from 'lib/res'
 
-/*components */
 import EntypoIcon from 'react-native-vector-icons/Entypo'
 
 class FAB extends Component{
@@ -134,7 +133,6 @@ export default FAB
 // import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 // import {colors, shadow} from 'lib/res'
 
-// /*components */
 // import AntIcon from 'react-native-vector-icons/AntDesign'
 
 // const FAB = ({onPress, option1, option2, option3, style}) => {

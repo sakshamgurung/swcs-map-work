@@ -1,4 +1,4 @@
-import {getObjects, getWorkData, getWasteData, chipsFilter} from "../mock/explore/MockServer";
+import {getObjects, getWorkData, getWasteData, chipsFilter} from "utilities";
 import axios from 'axios';
 
 import _ from "lodash";
@@ -140,7 +140,8 @@ export default function reducer(state = initialState, action){
     case types.CHIPS_SELECTED:{
       const {resultTrack} = action.payload.chipsFilteredGeoObject;
       const {selectedChipsId} = action.payload;
-      return {...state, selectedChipsId, chipsFilteredTrack:resultTrack}
+      return {...state, selectedChipsId, chipsFilteredTrack:resultTrack, selectedTrackIndex:-1, selectedZoneIndex:-1,
+      currentMarkerId:""}
     }
     //dismiss
     case types.DISMISS_SELECTED_GEO_OBJECT:{

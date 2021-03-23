@@ -2,8 +2,8 @@ import React, {Component, useState} from 'react'
 import {Marker} from 'react-native-maps'
 
 let _ = require("lodash");
-const checkpointMarker = require("assets/images/delete-icon-outline-15.png");
-const checkpointMarkerHighlight = require("assets/images/delete-icon-outline-highlight.png");
+const checkpointMarker = require("lib/assets/images/delete-icon-outline-15.png");
+const checkpointMarkerHighlight = require("lib/assets/images/delete-icon-outline-highlight.png");
 class CheckpointMarker extends Component{
   constructor(){
     super();

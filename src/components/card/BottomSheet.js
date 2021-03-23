@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView,
 import _ from 'lodash';
 import LinearGradient from 'react-native-linear-gradient'
 import shadow from 'lib/res/shadow'
-import colors from 'res/colors'
+import colors from 'lib/res/colors'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ListItem = ({onPressItem, icon, distance, title, desc}) => {

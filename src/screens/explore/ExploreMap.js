@@ -4,8 +4,7 @@
 import React, { Component} from 'react';
 import {connect} from 'react-redux';
 //action creator
-import {actions as exploreActions} from 'ducks/explore';
-import {types as exploreActionTypes} from 'ducks/explore';
+import {actions as exploreActions, types as exploreActionTypes} from 'store/ducks/explore';
 import { Dimensions, StyleSheet, View, Text, PermissionsAndroid, Platform, 
   Alert, TextInput, ScrollView} from 'react-native';
 /* Other dependencies */
@@ -15,23 +14,21 @@ import Geolocation from 'react-native-geolocation-service'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcons from 'react-native-vector-icons/Ionicons'
 /** Utilities */
-import {sortPoints} from 'lib/utilities';
+import {sortPoints, trackContains} from 'utilities';
 import pointInPolygon from 'point-in-polygon';
 import _ from 'lodash';
 /** Components */
-
-import {FAB, Button, Chips} from 'lib/components/button';
-import {CustomModal, SearchModal, BottomSheetInfo} from 'lib/components/card';
-import {CheckpointMarker} from 'lib/components/customMarker';
-import {MapEditPanel} from 'lib/components/frame';
-import {DummySearchBox, MapSearch as ChipsFilterSearch} from 'lib/components/input';
+import {FAB, Button, Chips} from 'components/button';
+import {CustomModal, SearchModal, BottomSheetInfo} from 'components/card';
+import {CheckpointMarker} from 'components/customMarker';
+import {MapEditPanel} from 'components/frame';
+import {DummySearchBox, MapSearch as ChipsFilterSearch} from 'components/input';
 /** res */
 import {shadow, colors} from 'lib/res';
 import {mapStyle} from './style';
-
-import {trackContains} from 'mock/explore/MockServer';
 import { bindActionCreators } from 'redux';
 
+/** ts class */
 class Point {
   constructor(c, identifier) {
     this.latitude = c.latitude;

@@ -4,8 +4,8 @@ import { View, Text, StyleSheet,
 import shadow from 'lib/res/shadow'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 // component
-import {MapSearch} from 'lib/components/input'
-import {Button} from 'lib/components/button'
+import {MapSearch} from 'components/input'
+import {Button} from 'components/button'
 
 export const CustomModal = (props) => {
   const{title, content, footerContent1, footerContent2,

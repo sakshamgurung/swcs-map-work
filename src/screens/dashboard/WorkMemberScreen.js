@@ -9,7 +9,7 @@ import MaterialCommIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import EntypoIcon from 'react-native-vector-icons/Entypo'
 import {shadow, colors} from 'lib/res'
-import {Button} from 'lib/components/button'
+import {Button} from 'components/button'
 
 function Header({title, onPressBack, onPressOption}){
   return(
