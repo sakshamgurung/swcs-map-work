@@ -15,7 +15,8 @@ import Geolocation from 'react-native-geolocation-service'
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import IonIcons from 'react-native-vector-icons/Ionicons'
 /** Utilities */
-import {convexHull, sortPoints} from 'lib/utilities';
+import {sortPoints} from 'lib/utilities';
+import pointInPolygon from 'point-in-polygon';
 import _ from 'lodash';
 /** Components */
 
@@ -33,7 +34,6 @@ import { bindActionCreators } from 'redux';
 
 class Point {
   constructor(c, identifier) {
-    this.coordiantes = c;
     this.latitude = c.latitude;
     this.longitude = c.longitude;
     this.identifier = identifier;
@@ -236,21 +236,16 @@ class ExploreMap extends Component {
       let index = _.findIndex(this.props.trackPoints, (o) => o.identifier == id);
       const newPoint = new Point(e.nativeEvent.coordinate, this.props.trackPoints[index].identifier);
       const trackPoints = _.cloneDeep(this.props.trackPoints);
-      trackPoints[index] = _.cloneDeep(newPoint);
+      trackPoints[index] = newPoint;
       this.props.dragTrackMarker(trackPoints);
     }else if(markerOf == "zone"){
       let id = e._targetInst.return.key;
       let index = _.findIndex(this.props.zonePoints, (o) => o.identifier == id);
       const newPoint = new Point(e.nativeEvent.coordinate, this.props.zonePoints[index].identifier);
       const zonePoints = _.cloneDeep(this.props.zonePoints);
-      zonePoints[index] = _.cloneDeep(newPoint);
-      if(zonePoints.length <=3){
-        this.props.dragZoneMarker(zonePoints);
-      }else{
-        // const tempZonePoints = grahamScan(zonePoints);
-        const tempZonePoints = sortPoints(zonePoints);
-        this.props.dragZoneMarker(tempZonePoints);
-      }
+      zonePoints[index] = newPoint;
+      const tempZonePoints = sortPoints(zonePoints);
+      this.props.dragZoneMarker(tempZonePoints);
     }
   }
 
@@ -264,6 +259,10 @@ class ExploreMap extends Component {
 
   // Zone panel button handlers
   _toggleZonePanel = () => {
+    if(this.props.zone.length >= 1){
+      Alert.alert("One company can have max one zone.","",[],{cancelable:true});
+      return;
+    }
     this.props.togglePanel(exploreActionTypes.SHOW_ZONE_PANEL);
   }
 
@@ -273,13 +272,8 @@ class ExploreMap extends Component {
     const coordinate = {latitude, longitude};
     const newPoint = new Point(coordinate, `${ Date.now() }.${ Math.random() }`);
     const rawPoints = _.cloneDeep([...this.props.zonePoints, newPoint]);
-    if(rawPoints.length <=3){
-      this.props.addZonePoint(rawPoints);
-      return;
-    }
-    //const zonePoints = grahamScan(rawPoints);
     const zonePoints = sortPoints(rawPoints);
-    this.props.addZonePoint(rawPoints);
+    this.props.addZonePoint(zonePoints);
   }
 
   _onPressDeleteZonePoint = () => {
@@ -302,19 +296,16 @@ class ExploreMap extends Component {
       zoneId = key;
     }
     let index = _.findIndex(this.props.zone, (o) => {return o.zoneId == zoneId});
-    this.props.zoneSelected(index);
+    //this.props.zoneSelected(index);
   }
   
   _renderNewZone(){
     if(this.props.showZonePanel){
-      if(this.props.zonePoints.length >= 3){
+      if(this.props.zonePoints.length >= 1){
         return(
           <Polygon coordinates={ this.props.zonePoints } fillColor="rgba(9,176,73,0.50)" strokeColor="rgba(9,176,73,0.50)"/>  //greenish color
         );
-      }
-      return(
-        <Polyline coordinates={ this.props.zonePoints } strokeColor="rgba(9,176,73,0.50)" />  
-      );
+     }
     }
   }
 
@@ -346,7 +337,7 @@ class ExploreMap extends Component {
         this.props.zone.map(z => (
           <Polygon key={z.zoneId} coordinates={z.zonePoints}
           tappable={true}  onPress={(e) => this._onPressZone(e)}
-          fillColor="rgba(75, 150, 235,0.50)" strokeColor="rgba(29, 60, 94, 0.50)"/> //bluish color
+          fillColor="rgba(153, 153, 153, 0.30)" strokeColor="rgba(29, 60, 94, 0.50)"/> //bluish color
         ))
       )
     }
@@ -371,15 +362,18 @@ class ExploreMap extends Component {
   _onPressAddTrackPoint = () => {
     const latitude = this._currentRegion.latitude._value;
     const longitude = this._currentRegion.longitude._value;
-    const coordinate = {latitude, longitude};
-    const newPoint = new Point(coordinate, `${ Date.now() }.${ Math.random() }`);
-    //let n = this.props.zonePoints.length;
-    //if(isPointInsidePolygon(this.props.zonePoints, n, newPoint)){
-    const trackPoints = _.cloneDeep([...this.props.trackPoints, newPoint]);
-    this.props.addTrackPoint(trackPoints);
-    // }else{
-    //   Alert.alert("Track point not inside the zone","",[],{cancelable:true});
-    // }
+    let arr = [];
+    this.props.zone[0].zonePoints.forEach(e => {
+      arr.push([e.latitude,e.longitude]);
+    })
+
+    if(pointInPolygon([latitude, longitude ], arr)){
+      const newPoint = new Point({latitude, longitude}, `${ Date.now() }.${ Math.random() }`);
+      const trackPoints = _.cloneDeep([...this.props.trackPoints, newPoint]);
+      this.props.addTrackPoint(trackPoints);
+    }else{
+      Alert.alert("Track point not inside the zone","",[],{cancelable:true});
+    }
   }
 
   _onPressDeleteTrackPoint = () => {
@@ -425,10 +419,8 @@ class ExploreMap extends Component {
         return(
           this.props.trackPoints.map((m) => (
             <Marker
-              key={ m.identifier }
-              coordinate={ m }
-              draggable = {true}
-              onDragEnd = {e => this._onDragReposition(e, "track")}
+              key={ m.identifier } coordinate={ m }
+              draggable = {true} onDragEnd = {e => this._onDragReposition(e, "track")}
               onPress={e => this._getMarkerKey(e)}
             >
               <Callout onPress={() => this._onPressDeleteTrackPoint()}>
@@ -447,7 +439,8 @@ class ExploreMap extends Component {
         this.props.track.map(t => (
           <Polyline key={t.trackId} coordinates={t.trackPoints} 
           tappable = {true} onPress = {e => this._onPressTrack(e)}
-          strokeColor="rgba(250, 125, 0, 0.80)" strokeWidth={3}/> //orangish color
+          lineDashPattern = {[5,5]}
+          strokeColor="rgba(250, 125, 0, 0.90)" strokeWidth={3}/> //orangish color
         ))
       )
     }
@@ -488,8 +481,7 @@ class ExploreMap extends Component {
     });
     this.props.thunkQueryChanged(trackDataResult,
       formatedQuery);
-    // this.props.thunkQueryChanged(trackDataResult, zoneDataResult,
-    //   formatedQuery).then(() => {this._makeRemoteRequest()});
+    // this.props.thunkQueryChanged(trackDataResult,formatedQuery).then(() => {this._makeRemoteRequest()});
   }
 
   _onCloseSearchBox = () => {
