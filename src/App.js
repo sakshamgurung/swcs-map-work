@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler';
 import {enableScreens} from 'react-native-screens';
+import {composeWithDevTools} from 'redux-devtools-extension';
 import React, { Component } from 'react';
 import {Provider} from 'react-redux';
 import {createStore, applyMiddleware} from 'redux';
@@ -11,7 +12,7 @@ class App extends Component {
   render() {
     console.disableYellowBox = true;
     enableScreens();
-    const store = createStore(reducers, {}, applyMiddleware(ReduxThunk));
+    const store = createStore(reducers, composeWithDevTools(applyMiddleware(ReduxThunk)));
     return (
       <Provider store={store}>
         <Router/>

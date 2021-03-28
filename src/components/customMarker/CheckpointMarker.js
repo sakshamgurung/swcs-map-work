@@ -29,7 +29,7 @@ class CheckpointMarker extends Component{
     this.setState({tracksViewChange:false});
   }
   render(){
-    const {coordinate, id, onPress, markerType="default"} = this.props;
+    const {coordinate, id, onPress=()=>{}, markerType="default"} = this.props;
     if(markerType == "default"){
       return (
         <Marker
@@ -43,7 +43,7 @@ class CheckpointMarker extends Component{
       return (
         <Marker
         coordinate = {coordinate}
-        onPress = {onPress}
+        onPress = {()=>onPress()}
         image = {checkpointMarkerHighlight}
         tracksViewChange={this.state.tracksViewChange}
         />

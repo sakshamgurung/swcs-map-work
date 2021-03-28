@@ -1,223 +1,120 @@
 const _ = require('lodash');
-const trackData = require('mock/explore/mockTrack.json');
-const zoneData = require('mock/explore/mockZone.json');
-const trackWasteData = require('mock/explore/mockTrackWaste.json');
-const workData  = require("mock/explore/mockWork.json");
-const collectorData = require("mock/explore/mockCollector.json");
-const vehicleData = require("mock/explore/mockVehicle.json");
 
 export const trackContains  = (trackData, query) => {
-  if(_.includes(trackData.trackName,query)){
-    return true;
-  }
-  return false;
+  return _.includes(trackData.trackName.toLowerCase(), query);
 }
 /**
  * get all geoObjects
  */
-export const getObjects = (query = "") => {
-  return new Promise((resolve, reject) => {
-    if (query.length === 0) {
-      const trackDataResult = trackData;
-      const zoneDataResult = zoneData;
-      resolve({trackDataResult, zoneDataResult});
-    } else {
-      const formattedQuery = query.toLowerCase();
-      const trackDataResult = _.filter(trackData, td => {
-        return trackContains(td, formattedQuery);
-      });
-      resolve({trackDataResult});
-    }
-  });
+export const getObjects = async(query = "", getState) => {
+  if (query.length != 0) {
+    const state = getState().explore;
+    const formattedQuery = query.toLowerCase();
+    const trackDataResult = _.filter(state.track, t => {
+      return trackContains(t, formattedQuery);
+    });
+    return trackDataResult;
+  }
 }
 
 /**
  * chips filter
  */
-export const chipsFilter = (type, query) => {
+export const chipsFilter = (type, query, workData, getState) => {
   let geoObjectResult = {};
   let resultTrack = [];
-  if(type == "waste condition"){
-    const fullTrackData = processChipsByWasteConditon(trackData, query);
-    if(fullTrackData.length != 0){
-      fullTrackData.map((ftd) => {
-        const {trackId, trackPoints} = ftd;
-        resultTrack.push({trackId, trackPoints});
-      });
-    }
+  const state = getState().explore;
 
+  if(type == "waste condition"){
+    const matchedTrack = _.filter(state.track, t => (t.wasteCondition == query));
+    matchedTrack.map((t) => {
+      resultTrack.push( _.pick(t, ["_id", "trackPoints"]) );
+    });
   }else if(type == "work status"){
     if(query == "no work"){
-      resultTrack = [...resultTrack, ...trackContainsWorkId(trackData, "no work")];
+      resultTrack = trackContainsWorkId(state.track, "no work");
     }else{
-      const fullWorkData = _.filter(workData, (wd) => {
-        if(query == wd.workStatus){
-          return true;
-        }
-        return false;
-      });
       let resultWorkId = [];
-      if(fullWorkData.length != 0){
-        fullWorkData.map((fwd) => {
-          const {id} = fwd;
-          resultWorkId.push(id);
-        });
-      }
-      if(resultWorkId.length != 0){
-        resultWorkId.map((wid) => {
-          resultTrack = [...resultTrack, ...trackContainsWorkId(trackData, wid)];
-        });
-      }
+      workData.map((w) => {
+        resultWorkId.push(w._id);
+      });
+      
+      resultWorkId.map((wid) => {
+        resultTrack = [...resultTrack, ...trackContainsWorkId(state.track, wid)];
+      });
     }
   }
+
   geoObjectResult["resultTrack"] = resultTrack;
-  return new Promise((resolve, reject) => {
-    resolve(geoObjectResult);
-  });
+  return geoObjectResult;
 }
 
-function processChipsByWasteConditon(geoObjectData, query){
-  const fullData = _.filter(geoObjectData, (god) => {
-    if(_.includes(god.wasteCondition, query)){
-      return true;
+function trackContainsWorkId(geoObjectData, workId){
+  const fullData = _.filter(geoObjectData, god => {
+    if(workId == "no work"){
+      if(god.hasOwnProperty("workId") && god.workId == ""){
+        return true;
+      }else if(!god.hasOwnProperty("workId")){
+        return true;
+      }
+      return false;
     }
-    return false;
+    return (god.workId == workId);
   });
-  return fullData;
-}
 
-function trackContainsWorkId(geoObjectData, query){
-  const fullData = _.filter(geoObjectData, (god)=>{
-    if(_.includes(god.workId, query)){
-      return true;
-    }
-    return false;
-  });
   const resultGeoObjectId = [];
-  if(fullData.length != 0){
-    fullData.map((fd)=>{
-      const {trackId, trackPoints} = fd;
-      resultGeoObjectId.push({trackId, trackPoints});
-    });
-  }
+  fullData.map( fd => {
+    resultGeoObjectId.push( _.pick(fd, ["_id", "trackPoints"]) );
+  });
+  
   return resultGeoObjectId;
 }
 
 /**
- * work filter
+ * explore screen infoEditFooter
  */
-export const getWorkData = ( geoObjectId, workDataOf, infoType) => {
-  if(infoType == "summary"){
-    let fullWorkData = []; 
-    let workSummary = {};
-    let collectorSummary = {};
-    let vehicleSummary = {};
+export const processInfoEditFooterData = (workData, wasteData, staffGroupData, vehicleData, dataOf  ) => {
+  const totalWasteSummary = processWasteData(wasteData);
+  const result = {};
 
-    if(workDataOf == "track"){
-      fullWorkData = _.filter(workData, (work) => {
-        let isGeoObjectPresent = false;
-        work.geoObjectTrackId.map((id)=>{
-          if (id == geoObjectId){
-            isGeoObjectPresent = true;
-          };
-        });
-        return isGeoObjectPresent;
-      });
-    }
-
-    if(fullWorkData.length != 0){
-      workSummary = processWorkData(fullWorkData[0], infoType);
-      collectorSummary = processCollectorData(collectorData, workSummary.collectorId, infoType);
-      vehicleSummary = processVehicleData(vehicleData, workSummary.vehicleId, infoType);
-      workSummary = {...workSummary, collectorSummary, vehicleSummary};
-    }
-    return new Promise((resolve, reject) => {
-      resolve({workSummary});
-    });
+  // if(!_.isEmpty(workData)){
+  //   result["workSummary"] = workData[0];
+  // }
+  
+  if(!_.isEmpty(staffGroupData)){
+    result["groupName"] = staffGroupData.groupName;
   }
-}
-
-function processWorkData(fullWorkData, infoType){
-  if(infoType == "summary"){
-    const {id, collectorId, vehicleId, workType, workStatus} = fullWorkData;
-    const workSummary = {id, collectorId, vehicleId, workType, workStatus};
-    return workSummary;
+  if(!_.isEmpty(vehicleData)){
+    result["plateNo"] = vehicleData.plateNo;
   }
-}
-
-function processCollectorData(collectorData, collectorId, infoType){
-  if(infoType == "summary"){
-    const fullCollectorData = _.filter(collectorData, (c)=>{
-      let isCollectorPresent = false;
-      if(c.id == collectorId){
-        isCollectorPresent = true;
-      };
-      return isCollectorPresent;
-    });
-    let collectorSummary = {};
-    if(fullCollectorData.length != 0){
-      const {firstName, lastName} = fullCollectorData[0];
-      collectorSummary["collectorName"] = firstName + lastName;
-    }
-    return collectorSummary;
+  if(!_.isEmpty(totalWasteSummary)){
+    result["totalWasteSummary"] = totalWasteSummary;
   }
+  return result;
 }
 
-function processVehicleData(vehicleData, vehicleId, infoType){
-  if(infoType == "summary"){
-    const fullVehicleData = _.filter(vehicleData, (c)=>{
-      let isVehiclePresent = false;
-      if(c.id == vehicleId){
-        isVehiclePresent = true;
-      };
-      return isVehiclePresent;
-    });
-    let vehicleSummary = {};
-    if(fullVehicleData.length != 0){
-      const {plateNumber} = fullVehicleData[0];
-      vehicleData["plateNumber"] = plateNumber;
-    }
-    return vehicleSummary;
-  }
-}
-
-/**
- * waste filter
- */
-export const getWasteData = async(wasteDataOf, ref) => {
-  let result = null;
-  switch(wasteDataOf){
-    case "track":
-      result = await getTrackWasteData(ref);
-      return result;
-    default:
-      return result;
-  }
-}
-
-const getTrackWasteData = (trackRef) => {
-  //filtering array by track Ref
-  filterByTrackID = _.filter(trackWasteData, (t) => {return t.trackRef == trackRef});
-  //getting total waste amount by category from given track
-  const totalWasteSummary = trackWasteDataProcessor(filterByTrackID);
-  return new Promise((resolve, reject) => {
-    resolve({totalWasteSummary});
-  });
-}
-
-const trackWasteDataProcessor = (wasteData) => {
+const processWasteData = (wasteData) => {
     let data = _.cloneDeep(wasteData);
-    let categories = [];
-    let catWithAmount = {};
-    //extracting categories
-    data.map((d) => categories.push(d.category));
-    //removing duplicate categories
-    categories = _.clone(_.uniq(categories));
-    //creating array with categories and amount
-    categories.map((c) => {catWithAmount[c] = 0});
+    let wasteList = [];
+    let wasteListWithAmount = {};
+    //extracting wasteList
+    data.map(d => wasteList.push(d.wasteListId));
+    //removing duplicate wasteList
+    wasteList = _.uniq(wasteList);
+    //creating array with wasteList and amount
+    wasteList.map((wl) => {wasteListWithAmount[wl] = 0});
     //summing up amount of same category
-    data.map((d) => {
-      catWithAmount[d.category] += d.amount;
+    data.map(d => {
+      wasteListWithAmount[d.wasteListId] += calCurrentAmtInKg(0, d.amountUnit, d.amount);
     });
-    return catWithAmount;
+    return wasteListWithAmount;
+}
+
+function calCurrentAmtInKg(currentAmount, amountUnit, amount){
+  if(amountUnit == "kg" || amountUnit == "litre"){
+      currentAmount += amount;
+  }else if(wd.amountUnit == "bora"){
+      currentAmount = currentAmount + ( amount * 15);//conversion from bora to 15 kg
+  }
+  return currentAmount;
 }

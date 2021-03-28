@@ -63,7 +63,7 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressT
           <MapSearch 
             style = {{position:"relative"}}
             visible = {true}
-            autoFocus = {true}
+            //autoFocus = {true}
             onChangeText = {onChangeText}
             value = {value}
             leftIcon = {
@@ -79,8 +79,8 @@ export const SearchModal = ({onRequestClose, onPressBack, onPressClear, onPressT
             <ScrollView style = {styles.listContent} onScrollBeginDrag={Keyboard.dismiss}>
               {trackData.map((td)=>
                 <ListItem
-                  key = {td.trackId}
-                  id = {td.trackId}
+                  key = {td._id}
+                  id = {td._id}
                   icon = {<MaterialIcon name="vector-polyline" size={20} color="rgba(247, 72, 72,1)"/>}
                   distance = {null}
                   title = {td.trackName}

@@ -21,6 +21,7 @@ const ListItem = ({onPressItem, icon, distance, title, desc}) => {
     </TouchableOpacity>
   )
 }
+
 export const BottomSheetList = ({data}) => {
   return (
     <View style = {styles.searchBottomSheet}>
@@ -48,25 +49,21 @@ const StatusChips = ({status}) => {
     </View>
   )
 }
-const Header = ({title, wasteCondition, workData, onPressSeeDetail}) => {
-  let workStatus, collectorName, plateNumber;
-  if(_.isEmpty(workData)){
+
+const Header = ({title, workStatus, wasteCondition, staffGroupName, vehiclePlateNo, onPressSeeDetail}) => {
+  if(_.isEmpty(workStatus)){
     workStatus = "no work";
-    collectorName = "no collector";
-    plateNumber = "no vehicle";
-  }else{
-    workStatus = workData.workStatus;
-    if(_.isEmpty(workData.collectorSummary)){
-      collectorName = "no collector";
-    }else{
-      collectorName = workData.collectorSummary.collectorName;
-    }
-    if(_.isEmpty(workData.vehicleSummary)){
-      plateNumber = "no vehicle";
-    }else{
-      plateNumber = workData.vehicleSummary.plateNumber;
-    }
   }
+  if(_.isEmpty(wasteCondition)){
+    wasteCondition = "no waste";
+  }
+  if(_.isEmpty(staffGroupName)){
+    staffGroupName = "no staff group";
+  }
+  if(_.isEmpty(vehiclePlateNo)){
+    vehiclePlateNo = "no vehicle";
+  }
+
   return(
     <View style = {styles.infoHeader}>
       <View style={styles.headerTitleContainer}>
@@ -82,22 +79,23 @@ const Header = ({title, wasteCondition, workData, onPressSeeDetail}) => {
         </View>
         <View style={styles.chipsContainerItem}>
           <Text style={styles.chipsTitle}>Waste</Text>
-          <StatusChips status = {_.isEmpty(wasteCondition)? "no waste":wasteCondition}/>
+          <StatusChips status = {wasteCondition}/>
         </View>
       </View>
       <View style={styles.chipsContainer}>
         <View style={styles.chipsContainerItem}>
-          <Text style={styles.chipsTitle}>Collector</Text>
-          <StatusChips status = {collectorName}/>
+          <Text style={styles.chipsTitle}>Staff Group</Text>
+          <StatusChips status = {staffGroupName}/>
         </View>
         <View style={styles.chipsContainerItem}>
           <Text style={styles.chipsTitle}>Vehicle</Text>
-          <StatusChips status = {plateNumber}/>
+          <StatusChips status = {vehiclePlateNo}/>
         </View>
       </View>
     </View>
   )
 }
+
 const WasteCategoryItem = ({amount, category}) => {
   return(
     <View style={styles.wasteCategoryItemContainer}>
@@ -115,12 +113,14 @@ const WasteCategoryItem = ({amount, category}) => {
     </View>
   )
 }
+
 const Divider = () => {
   return (
    <View style={{borderTopWidth:2, borderTopColor:"rgba(204, 204, 204, 1)", marginHorizontal:10}}></View> 
   )
 }
-export const BottomSheetInfo = ({title, wasteCondition, workId, workData, wasteData}) => {
+
+export const BottomSheetInfo = ({title, workStatus, wasteCondition,  staffGroupName, vehiclePlateNo, wasteData}) => {
   return (
     <View style = {styles.infoEdit}>
       <LinearGradient colors={["rgba(236, 233, 230, 1)","rgba(242, 242, 242, 1)"]} style = {styles.infoEditContainer}>
@@ -129,8 +129,10 @@ export const BottomSheetInfo = ({title, wasteCondition, workId, workData, wasteD
           showsVerticalScrollIndicator={true}
           style={styles.infoEditContainerScrollView}
         >
-          <Header title = {title} wasteCondition={wasteCondition} workData={workData}/>
+          <Header title = {title} workStatus={workStatus}  wasteCondition={wasteCondition} staffGroupName={staffGroupName} vehiclePlateNo={vehiclePlateNo}/>
+
           <Divider/>
+
           <View>
             <Text style={styles.wasteCategoryItemTitle}>Waste amount by category</Text>
           </View>
@@ -152,12 +154,13 @@ export const BottomSheetInfo = ({title, wasteCondition, workId, workData, wasteD
     </View>
   );
 }
+
 function getBGColor(buttonStatus){
   switch(buttonStatus){
     case "unconfirmed":
     case "medium":
       return ({backgroundColor:colors.warningButton});
-    case "assigned":
+    case "confirmed":
     case "low":
       return ({backgroundColor:colors.primaryButton});
     case "on progress":
@@ -170,6 +173,7 @@ function getBGColor(buttonStatus){
       return ({backgroundColor:colors.primaryButton});
   }
 }
+
 const styles = StyleSheet.create({
   searchBottomSheet:{
     flex:1,

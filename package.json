@@ -26,7 +26,7 @@
     "@react-navigation/native": "^5.4.3",
     "@react-navigation/stack": "^5.4.0",
     "@types/jest": "^26.0.13",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "geolib": "^3.3.1",
     "hull.js": "^1.0.0",
     "lodash": "^4.17.19",
@@ -35,7 +35,7 @@
     "moment-timezone": "^0.5.31",
     "point-in-polygon": "^1.0.1",
     "react": "16.13.1",
-    "react-native": "^0.63.3",
+    "react-native": "^0.64.0",
     "react-native-calendars": "^1.403.0",
     "react-native-config": "^1.2.1",
     "react-native-daterange-picker": "^1.4.0",
@@ -52,6 +52,7 @@
     "react-native-vector-icons": "^6.6.0",
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
+    "redux-devtools-extension": "^2.13.9",
     "redux-thunk": "^2.3.0"
   },
   "devDependencies": {

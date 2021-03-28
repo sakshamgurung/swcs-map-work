@@ -13,8 +13,8 @@ const MainBottomTab = createBottomTabNavigator();
 
 const MainBottomTabNavigator = () => (
   <MainBottomTab.Navigator>
-    <MainBottomTab.Screen name="Work" component={DashboardNavigator}/>
     <MainBottomTab.Screen name="Explore" component={ExploreNavigator}/>
+    <MainBottomTab.Screen name="Work" component={DashboardNavigator}/>
   </MainBottomTab.Navigator>
 )
 

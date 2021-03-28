@@ -2,9 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths":{
+      "api/*":["./api/*"],
       "components/*":["./components/*"],
       "lib/*":["./lib/*"],
-      "mock/*":["./mock/*"],
       "screens/*":["./screens/*"],
       "store/*":["./store/*"],
       "utilities/*":["./utilities/*"],

@@ -1,5 +1,5 @@
-import {getObjects, getWorkData, getWasteData, chipsFilter} from "utilities";
-import axios from 'axios';
+import {getObjects, getWorkData, getWasteData, chipsFilter, processInfoEditFooterData} from "utilities";
+import {loggedInClient, GeoObjectUrl, WorkUrl, WasteDumpUrl, StaffGroupUrl, VehicleUrl} from "api"
 
 import _ from "lodash";
 //types
@@ -22,26 +22,25 @@ export const types = {
   TOGGLE_SEARCH_BOX:"explore/toggleSearchBox",
   QUERY_CHANGED:"explore/trackQueryChanged",
 
+  POST_GEO_OBJECTS:"explore/postGeoObjects",
+  POST_GEO_OBJECTS_SUCCESS:"explore/postGeoObjectsSuccess",
+  POST_GEO_OBJECTS_FAILURE:"explore/postGeoObjectsFailure",
+
   LOAD_GEO_OBJECTS:"explore/loadGeoObjects",
   LOAD_GEO_OBJECTS_SUCCESS:"explore/loadGeoObjectsSuccess",
   LOAD_GEO_OBJECTS_FAILURE:"explore/loadGeoObjectsFailure",
   
-  LOAD_GEO_OBJECTS_WORK:"explore/loadGeoObjectsWork",
-  LOAD_GEO_OBJECTS_WORK_SUCCESS:"explore/loadGeoObjectsWorkSuccess",
-  LOAD_GEO_OBJECTS_WORK_FAILURE:"explore/loadGeoObjectsWorkFailure",
-  
-  LOAD_GEO_OBJECTS_WASTE:"explore/loadGeoObjectsWaste",
-  LOAD_GEO_OBJECTS_WASTE_SUCCESS:"explore/loadGeoObjectsWasteSuccess",
-  LOAD_GEO_OBJECTS_WASTE_FAILURE:"explore/loadGeoObjectsWasteFailure",
+  LOAD_INFO_EDIT_FOOTER_DATA:"explore/loadInfoEditFooterData",
+  LOAD_INFO_EDIT_FOOTER_DATA_SUCCESS:"explore/loadInfoEditFooterDataSuccess",
+  LOAD_INFO_EDIT_FOOTER_DATA_FAILURE:"explore/loadInfoEditFooterDataFailure",
   
   SHOW_DEFAULT_PANEL:"explore/showDefalutPanel",
-  SHOW_TRACK_PANEL_1:"explore/showTrackPanel1",
+  SHOW_TRACK_PANEL:"explore/showTrackPanel",
   SHOW_ZONE_PANEL:"explore/showZonePanel",
   
-  CANCEL_TRACK_PANEL_1:"explore/cancelTrackPanel1",
-  DONE_TRACK_PANEL_1:"explore/doneTrackPanel1",
-  CANCEL_ZONE_PANEL:"explore/cancelZonePanel",
-  DONE_ZONE_PANEL:"explore/doneZonePanel",
+  CLOSE_TRACK_PANEL:"explore/CloseTrackPanel",
+
+  CLOSE_ZONE_PANEL:"explore/closeZonePanel",
 
   TOGGLE_MAP_SEARCH:"explore/toggleMapSearch",
   CANCEL_NAME_MODAL:"explore/cancelNameModal",
@@ -70,13 +69,13 @@ export const initialState = {
       name: 'work unconfirmed', query:'unconfirmed', id: 'c4', type: 'work status'
     },
     {
-      name: 'work assigned', query:'assigned', id: 'c5', type: 'work status'
+      name: 'work confirmed', query:'confirmed', id: 'c5', type: 'work status'
     },
     {
       name: 'work on progress', query:'on progress', id: 'c6', type: 'work status'
     },
     {
-      name: 'no work', query:'no work', id: 'c7', type: 'work status'
+      name: 'work finished', query:'finished', id: 'c7', type: 'work status'
     }
   ],
   region: {},
@@ -87,7 +86,7 @@ export const initialState = {
   searchQuery:"",
   showDefaultPanel:true,
   showZonePanel:false,
-  showTrackPanel1:false,
+  showTrackPanel:false,
   nameModalVisible:false,
   nameModalValue:"",
   zone:[],
@@ -99,8 +98,7 @@ export const initialState = {
   currentMarkerId:"",
   selectedTrackIndex:-1,
   selectedZoneIndex:-1,
-  workData:{},
-  trackWasteData:{},
+  infoEditFooterData:{},
   selectedChipsId:"",
   chipsFilteredTrack:{}
 }
@@ -108,162 +106,180 @@ export const initialState = {
 export default function reducer(state = initialState, action){
   switch(action.type){
     //location
-    case types.LOCATION_GRANTED:{
+    case types.LOCATION_GRANTED: {
       const pos = action.payload;
-      const region={
-        latitude:pos.coords.latitude,
-        longitude:pos.coords.longitude, 
-        latitudeDelta:0.10,
-        longitudeDelta:0.10};
-      return {...state, hasMapPermission:true, region };
+      const region = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        latitudeDelta: 0.10,
+        longitudeDelta: 0.10
+      };
+      return { ...state, hasMapPermission: true, region };
     }
-    case types.LOCATION_DENIED:{
-      //handle error
-      return {...state, error:action.payload};
+    case types.LOCATION_DENIED: {
+    //handle error
+      return { ...state, errorInfo: action.payload };
     }
     //region
-    case types.REGION_CHANGED:{
-      return {...state, region:action.payload};
+    case types.REGION_CHANGED: {
+      return { ...state, region: action.payload };
     }
     //current marker
-    case types.MARKER_SELECTED:{
-      return {...state, currentMarkerId: action.payload};
-    }
-    //selected geo objects no in use right now
-    case types.TRACK_SELECTED:{
-      return {...state, selectedTrackIndex:action.payload};
-    }
-    case types.ZONE_SELECTED:{
-      return {...state, selectedZoneIndex:action.payload, selectedTrackIndex:-1, currentMarkerId:""};
-    }
-    //chips filetered geo objects
-    case types.CHIPS_SELECTED:{
-      const {resultTrack} = action.payload.chipsFilteredGeoObject;
-      const {selectedChipsId} = action.payload;
-      return {...state, selectedChipsId, chipsFilteredTrack:resultTrack, selectedTrackIndex:-1, selectedZoneIndex:-1,
-      currentMarkerId:""}
-    }
-    //dismiss
-    case types.DISMISS_SELECTED_GEO_OBJECT:{
-      return {...state, selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerId:"", chipsFilteredTrack:{},
-      selectedChipsId:""};
-    }
-    //loading geo objects
-    case types.LOAD_GEO_OBJECTS:{
-      return {...state};
-    }
-    case types.LOAD_GEO_OBJECTS_SUCCESS:{
-      const {trackDataResult, zoneDataResult} = action.payload;
-      return {...state, track:trackDataResult, zone:zoneDataResult,
-        queryTrack:trackDataResult, fullQueryTrack:trackDataResult
-      };
-    }
-    case types.LOAD_GEO_OBJECTS_FAILURE:{
-      return {...state, error:action.payload};
-    }
-    
-    //loading geo objects work
-    case types.LOAD_GEO_OBJECTS_WORK:{
-      return {...state};
-    }
-    case types.LOAD_GEO_OBJECTS_WORK_SUCCESS:{
-      const {response, selectedGeoObjectIndex, workDataOf} = action.payload;
-      if(workDataOf == "track"){
-        return {...state, workData:response};
-      }
-    }
-    case types.LOAD_GEO_OBJECTS_WORK_FAILURE:{
-      return {...state, error:action.payload};
-    }
-    //loading geo objects waste
-    case types.LOAD_GEO_OBJECTS_WASTE:{
-      return {...state};
-    }
-    case types.LOAD_GEO_OBJECTS_WASTE_SUCCESS:{
-      const {response, selectedGeoObjectIndex, wasteDataOf} = action.payload;
-      if(wasteDataOf == "track"){
-        return {...state, trackWasteData:response, selectedTrackIndex:selectedGeoObjectIndex,
-          currentMarkerId:"", selectedZoneIndex:-1};
-      }
-    }
-    case types.LOAD_GEO_OBJECTS_WASTE_FAILURE:{
-      return {...state, error:action.payload};
-    }
-    
-    //default panel
-    case types.SHOW_DEFAULT_PANEL:{
-      return {...state};
-    }
-    //zone panel
-    case types.SHOW_ZONE_PANEL:{
-      return {...state, showDefaultPanel:false, mapSearchVisible:false,
-        selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerId:"", showZonePanel:true};
-    }
-    //track panel
-    case types.SHOW_TRACK_PANEL_1:{
-      return {...state, showDefaultPanel:false, mapSearchVisible:false, 
-        selectedTrackIndex:-1, selectedZoneIndex:-1, currentMarkerId:"", showTrackPanel1:true};
-    }
-    
-    //new zone reducers
-    case types.ADD_ZONE_POINT:{
-      return {...state, zonePoints:action.payload};
-    }
-    case types.DELETE_ZONE_POINT:{
-      const zonePoints = _.cloneDeep(state.zonePoints);
-      zonePoints.splice(action.payload,1);
-      return {...state, zonePoints};
-    }
-    case types.DONE_ZONE_PANEL:{
-      return {...state, zone:action.payload, zonePoints:[], currentMarkerId:"", nameModalValue:"", 
-      nameModalVisible:false, showZonePanel:false, showDefaultPanel:true, mapSearchVisible:true};
-    }
-    case types.CANCEL_ZONE_PANEL:{
-      return {...state, zonePoints:[], showZonePanel:false, currentMarkerId:"", 
-      showDefaultPanel:true, mapSearchVisible:true };
-    }
-    
-    //new track reducers
-    case types.ADD_TRACK_POINT:{
-      return {...state, trackPoints:action.payload};
-    }
-    case types.DELETE_TRACK_POINT:{
-      const trackPoints = _.cloneDeep(state.trackPoints);
-      //removing the points using action.payload i.e. removeIndex
-      trackPoints.splice(action.payload,1);
-      return {...state, trackPoints};
-    }
-    case types.DONE_TRACK_PANEL_1:{
-      return {...state, track:action.payload, trackPoints:[], currentMarkerId:"", nameModalValue:"", 
-      nameModalVisible:false, showTrackPanel1:false, showDefaultPanel:true, mapSearchVisible:true};
-    }
-    case types.CANCEL_TRACK_PANEL_1:{
-      return {...state, trackPoints:[], showTrackPanel1:false,currentMarkerId:"", 
-      showDefaultPanel:true, mapSearchVisible:true};
-    }
-    //search box reducers
-    case types.TOGGLE_SEARCH_BOX:{
-      return {...state, mapSearchFocused:!state.mapSearchFocused,
-        mapSearchVisible:!state.mapSearchVisible};
+    case types.MARKER_SELECTED: {
+      return { ...state, currentMarkerId: action.payload };
     }
 
-    case types.QUERY_CHANGED:{
-      const {trackDataResult, formatedQuery} = action.payload;
-      return {...state, queryTrack:trackDataResult, searchQuery:formatedQuery}
+    case types.TRACK_SELECTED: {
+      return { ...state, selectedTrackIndex: action.payload };
+    }
+    case types.ZONE_SELECTED: {
+      return { ...state, selectedZoneIndex: action.payload, selectedTrackIndex: -1};
+    }
+
+    case types.CHIPS_SELECTED: {
+      const { resultTrack } = action.payload.chipsFilteredGeoObject;
+      const { selectedChipsId } = action.payload;
+      return {
+        ...state, selectedChipsId, chipsFilteredTrack: resultTrack, selectedTrackIndex: -1, selectedZoneIndex: -1
+      }
+    }
+
+    case types.DISMISS_SELECTED_GEO_OBJECT: {
+      return {
+        ...state, selectedTrackIndex: -1, selectedZoneIndex: -1, chipsFilteredTrack: {},
+        selectedChipsId: ""
+      };
+    }
+
+    case types.LOAD_GEO_OBJECTS: {
+      return { ...state };
+    }
+
+    case types.LOAD_GEO_OBJECTS_SUCCESS: {
+      const { trackDataResult, zoneDataResult } = action.payload;
+      return {
+        ...state, track: trackDataResult, zone: zoneDataResult,
+        queryTrack: trackDataResult, fullQueryTrack: trackDataResult
+      };
+    }
+
+    case types.LOAD_GEO_OBJECTS_FAILURE: {
+      return { ...state, errorInfo: action.payload };
+    }
+
+    //loading infoEditFooterData
+    case types.LOAD_INFO_EDIT_FOOTER_DATA: {
+      return { ...state };
+    }
+
+    case types.LOAD_INFO_EDIT_FOOTER_DATA_SUCCESS: {
+      const { response, dataOf } = action.payload;
+      console.log("response:\n",response);
+      if (dataOf == "track") {
+        return { ...state, infoEditFooterData: response };
+      }
     }
     
+    case types.LOAD_INFO_EDIT_FOOTER_DATA_FAILURE: {
+      return { ...state, errorInfo: action.payload };
+    }
+
+    case types.SHOW_DEFAULT_PANEL: {
+      return { ...state };
+    }
+
+    case types.SHOW_ZONE_PANEL: {
+      return {
+        ...state, showDefaultPanel: false, mapSearchVisible: false,
+        selectedTrackIndex: -1, selectedZoneIndex: -1, showZonePanel: true
+      };
+    }
+
+    case types.SHOW_TRACK_PANEL: {
+      return {
+        ...state, showDefaultPanel: false, mapSearchVisible: false,
+        selectedTrackIndex: -1, selectedZoneIndex: -1, showTrackPanel: true
+      };
+    }
+
+    //new zone reducers
+    case types.ADD_ZONE_POINT: {
+      return { ...state, zonePoints: action.payload };
+    }
+
+    case types.DELETE_ZONE_POINT: {
+      const zonePoints = _.cloneDeep(state.zonePoints);
+      zonePoints.splice(action.payload, 1);
+      return { ...state, zonePoints };
+    }
+
+    case types.CLOSE_ZONE_PANEL: {
+      return {
+        ...state, zonePoints: [], showZonePanel: false, currentMarkerId: "", showDefaultPanel: true, mapSearchVisible: true
+      };
+    }
+
+    //new track reducers
+    case types.ADD_TRACK_POINT: {
+      return { ...state, trackPoints: action.payload };
+    }
+
+    case types.DELETE_TRACK_POINT: {
+      const trackPoints = _.cloneDeep(state.trackPoints);
+      trackPoints.splice(action.payload, 1);
+      return { ...state, trackPoints };
+    }
+
+    case types.CLOSE_TRACK_PANEL: {
+      return {
+        ...state, trackPoints: [], currentMarkerId: "", showTrackPanel: false, showDefaultPanel: true, mapSearchVisible: true
+      };
+    }
+    //posting new geoObjects
+    case types.POST_GEO_OBJECTS_SUCCESS: {
+      const {geoObjectType, response} = action.payload;
+      if(geoObjectType == "track"){
+        return {
+          ...state, track: response, queryTrack: response, fullQueryTrack: response
+        };
+      }else if(geoObjectType == "zone"){
+        return {
+          ...state, zone:response
+        }
+      }
+    }
+
+    case types.POST_GEO_OBJECTS_FAILURE: {
+      return {
+        ...state, errorInfo:action.payload
+      };
+    }
+    //search box reducers
+    case types.TOGGLE_SEARCH_BOX: {
+      return {
+        ...state, mapSearchFocused: !state.mapSearchFocused,
+        mapSearchVisible: !state.mapSearchVisible
+      };
+    }
+
+    case types.QUERY_CHANGED: {
+      const { trackDataResult, formattedQuery } = action.payload;
+      return { ...state, queryTrack: trackDataResult, searchQuery: formattedQuery }
+    }
+
     //name modal reducers
-    case types.TOGGLE_NAME_MODAL:{
-      return {...state, nameModalVisible:!state.nameModalVisible};
+    case types.TOGGLE_NAME_MODAL: {
+      return { ...state, nameModalVisible: !state.nameModalVisible };
     }
-    case types.CANCEL_NAME_MODAL:{
-      return {...state, nameModalValue:"", nameModalVisible:false}
+    case types.CANCEL_NAME_MODAL: {
+      return { ...state, nameModalValue: "", nameModalVisible: false }
     }
-    case types.NAME_MODAL_CHANGED:{
-      return {...state, nameModalValue:action.payload}
+    case types.NAME_MODAL_CHANGED: {
+      return { ...state, nameModalValue: action.payload }
     }
-    default:{
-      return {...state};
+
+    default: {
+      return { ...state };
     }
   }
 }
@@ -275,8 +291,8 @@ const locationGranted = (position) => {
   console.log(position);
   return ({type:types.LOCATION_GRANTED, payload:position});
 }
+
 const locationDenied = (err) => {
-  console.log(err);
   return ({type:types.LOCATION_DENIED, payload:err});
 }
 
@@ -294,12 +310,15 @@ const markerSelected = (markerId) => {
 const trackSelected = (selectedTrackIndex) => {
   return ({type:types.TRACK_SELECTED, payload:selectedTrackIndex});
 }
+
 const zoneSelected = (selectedZoneIndex) => {
   return ({type:types.ZONE_SELECTED, payload:selectedZoneIndex});
 }
+
 const chipsSelected = (chipsFilteredGeoObject, selectedChipsId) => {
   return ({type:types.CHIPS_SELECTED, payload:{chipsFilteredGeoObject, selectedChipsId}});
 }
+
 //DISMISS action creator
 const dismissSelectedGeoObject = () => {
   return ({type:types.DISMISS_SELECTED_GEO_OBJECT});
@@ -309,170 +328,235 @@ const dismissSelectedGeoObject = () => {
 const loadGeoObjects = () => {
   return ({type:types.LOAD_GEO_OBJECTS});
 }
+
 const loadGeoObjectsSuccess = (response) => {
   return ({type:types.LOAD_GEO_OBJECTS_SUCCESS, payload:response});
 }
+
 const loadGeoObjectsFailure = (err) => {
-  console.log("err for loadGeoObjectsFailure ",err);
   return ({type:types.LOAD_GEO_OBJECTS_FAILURE, payload:err});
 }
 
 //WORK data action creator
-const loadGeoObjectsWork = () => {
-  return ({type: types.LOAD_GEO_OBJECTS_WORK});
-}
-const loadGeoObjectsWorkSuccess = (response, selectedGeoObjectIndex, workDataOf) => {
-  return ({type: types.LOAD_GEO_OBJECTS_WORK_SUCCESS, payload:{response, selectedGeoObjectIndex, workDataOf}});
-}
-const loadGeoObjectsWorkFailure = (err) => {
-  return ({type: types.LOAD_GEO_OBJECTS_WORK_FAILURE, payload:err});
+const loadInfoEditFooterData = () => {
+  return ({type: types.LOAD_INFO_EDIT_FOOTER_DATA});
 }
 
-//WASTE data action creator
-const loadGeoObjectsWaste = () => {
-  return ({type: types.LOAD_GEO_OBJECTS_WASTE});
-}
-const loadGeoObjectsWasteSuccess = (response, selectedGeoObjectIndex, wasteDataOf) => {
-  return ({type: types.LOAD_GEO_OBJECTS_WASTE_SUCCESS, payload:{response, selectedGeoObjectIndex, wasteDataOf}});
-}
-const loadGeoObjectsWasteFailure = (err) => {
-  return ({type: types.LOAD_GEO_OBJECTS_WASTE_FAILURE, payload:err});
+const loadInfoEditFooterDataSuccess = (response, dataOf) => {
+  return ({type: types.LOAD_INFO_EDIT_FOOTER_DATA_SUCCESS, payload:{response, dataOf}});
 }
 
-//ZONE action creator
+const loadInfoEditFooterDataFailure = (err) => {
+  return ({type: types.LOAD_INFO_EDIT_FOOTER_DATA_FAILURE, payload:err});
+}
+
+// Post geo objects
+const postGeoObjects = (p) => {
+  return ({type:types.POST_GEO_OBJECTS, payload:p})
+}
+
+const postGeoObjectsSuccess = (response, geoObjectType) => {
+  return ({type:types.POST_GEO_OBJECTS_SUCCESS, payload:{response, geoObjectType}});
+}
+
+const postGeoObjectsFailure = (err) => {
+  return ({type:types.POST_GEO_OBJECTS_FAILURE, payload:err});
+}
+
+
 const togglePanel = (panelType) => {
   return ({type:panelType});
 }
+
+//ZONE action creator
 const addZonePoint = (zonePoints) => {
   return ({type:types.ADD_ZONE_POINT, payload:zonePoints});
 }
+
 const dragZoneMarker = (zonePoints) => {
   return ({type:types.ADD_ZONE_POINT, payload:zonePoints});
 }
 const deleteZonePoint = (removeIndex) => {
   return ({type:types.DELETE_ZONE_POINT, payload:removeIndex});
 }
-const doneZonePanel = (zone) => {
-  //make api call to save new zone
-  return({type:types.DONE_ZONE_PANEL, payload:zone});
-}
-const cancelZonePanel = () => {
-  return({type:types.CANCEL_ZONE_PANEL});
+
+const closeZonePanel = () => {
+  return({type:types.CLOSE_ZONE_PANEL});
 }
 
 //TRACK action creator
 const addTrackPoint = (trackPoints) => {
   return ({type:types.ADD_TRACK_POINT, payload:trackPoints});
 }
+
 const dragTrackMarker = (trackPoints) => {
   //reusing type
   return ({type: types.ADD_TRACK_POINT, payload:trackPoints});
 }
+
 const deleteTrackPoint = (removeIndex) => {
   return ({type:types.DELETE_TRACK_POINT, payload:removeIndex});
 }
-const doneTrackPanel1 = (track) => {
-  //make api call to save new track
-  return({type:types.DONE_TRACK_PANEL_1, payload:track});
+
+const closeTrackPanel = () => {
+  return({type:types.CLOSE_TRACK_PANEL});
 }
-const cancelTrackPanel1 = () => {
-  return({type:types.CANCEL_TRACK_PANEL_1});
-}
+
 
 //search box action creator
 const toggleSearchBox = () => {
   return ({type:types.TOGGLE_SEARCH_BOX});
 }
-const queryChanged = (trackDataResult, formatedQuery) => {
-  return ({type:types.QUERY_CHANGED, payload:{trackDataResult, formatedQuery}});
+
+const queryChanged = (trackDataResult, formattedQuery) => {
+  return ({type:types.QUERY_CHANGED, payload:{trackDataResult, formattedQuery}});
 }
 
 //name modal action creator
 const toggleNameModal = () => {
   return ({type:types.TOGGLE_NAME_MODAL});
 }
+
 const cancelNameModal = () => {
   return ({type:types.CANCEL_NAME_MODAL});
 }
+
 const nameModalChanged = (geoObjectName) => {
   return ({type:types.NAME_MODAL_CHANGED, payload:geoObjectName})
 }
 
 /**
  * thunk functions
+ * using shorthand notation for:
+ * const foo = (para) => {
+ *  return (dispatch, getState) => {
+ *    //...code
+ *  }
+ * }
  * */
-const thunkLoadGeoObjects = (searchQuery) => {
-  return (dispatch) => {
-    //dispatch(loadGeoObjects());
-    getObjects(searchQuery)
-    .then((response) => {
-      dispatch(loadGeoObjectsSuccess(response));
-    })
-    .catch(err => {
-      console.log("error from geoObjects thunk action: ",err);
-      dispatch(loadGeoObjectsFailure(err));
-    });
+let companyId = "60465952ed6770392c038261";
+//companyId = "604a209488ecec33c4b29050";
+const thunkLoadGeoObjects = (searchQuery) => async(dispatch, getState) => {
+  //dispatch(loadGeoObjects());
+  if(searchQuery.length != 0){
+    const trackDataResult = getObjects(searchQuery, getState);
+    dispatch(loadGeoObjectsSuccess({trackDataResult}));
+  }
+  try{
+    const [trackRes, zoneRes] = await Promise.all([
+      loggedInClient.get(new GeoObjectUrl().getAll(companyId, "track")),
+      loggedInClient.get(new GeoObjectUrl().getAll(companyId, "zone"))
+    ]);
+    
+    const trackDataResult = trackRes.data;
+    const zoneDataResult = zoneRes.data;
+    dispatch(loadGeoObjectsSuccess({trackDataResult, zoneDataResult}));
+  }catch(err){
+    console.log("Load geo object failed error: \n",err);
+    dispatch(loadGeoObjectsFailure("Server error: Load geo object"));
   }
 }
 
-const thunkLoadGeoObjectWork = (geoObjectId, selectedGeoObjectIndex, workDataOf, infoType) => {
-  return (dispatch) => {
-    //dispatch(loadGeoObjectsWork());
-    getWorkData( geoObjectId, workDataOf, infoType)
-    .then((response) => {
-      dispatch(loadGeoObjectsWorkSuccess(response, selectedGeoObjectIndex, workDataOf));
-    })
-    .catch(err => {
-      console.log("error from work thunk action: ",err);
-      dispatch(loadGeoObjectsWorkFailure(err));
-    });
-    //return new Promise((resolve, reject)=> resolve())
-  }
-}
-const thunkChipsSelected = (type, query, id) => {
-  return (dispatch) => {
-    chipsFilter(type, query)
-    .then((response) => {
-      dispatch(chipsSelected(response, id));
-    });
-  }
-}
-const thunkLoadGeoObjectWaste = (geoObjectId, selectedGeoObjectIndex, wasteDataOf) => {
-  return (dispatch) => {
-    //dispatch(loadGeoObjectsWaste());
-    getWasteData( wasteDataOf, geoObjectId)
-    .then((response) => {
-      dispatch(loadGeoObjectsWasteSuccess(response, selectedGeoObjectIndex, wasteDataOf));
-    })
-    .catch(err => {
-      console.log("error from waste thunk action: ",err);
-      dispatch(loadGeoObjectsWasteFailure(err));
-    });
-    //return new Promise((resolve, reject)=> resolve())
+const thunkLoadInfoEditFooterData = (geoObjectId, selectedGeoObjectIndex, dataOf) => async(dispatch) => {
+  //dispatch(loadInfoEditFooterData());
+  dispatch(trackSelected(selectedGeoObjectIndex));
+  try {
+    const [workRes, wasteRes] = await Promise.all([
+      loggedInClient.get(new WorkUrl().getByRef("geoObjectTrackId", geoObjectId)),
+      loggedInClient.get(new WasteDumpUrl().getByRef("geoObjectId", geoObjectId)),
+    ]);
+    //res data is an array
+    const workData = workRes.data;
+    const wasteData = wasteRes.data;
+
+    if(workData.length !=0){
+      const {staffGroupId, vehicleId} = workData[0];
+      const [staffGroupRes, vehicleRes] = await Promise.all([
+        loggedInClient.get(new StaffGroupUrl().getById(staffGroupId)),
+        loggedInClient.get(new VehicleUrl().getById(vehicleId))
+      ]);
+      //res data is an object
+      const staffGroupData = staffGroupRes.data;
+      const vehicleData = vehicleRes.data;
+      const processedData = processInfoEditFooterData(workData, wasteData, staffGroupData, vehicleData, dataOf);
+      dispatch(loadInfoEditFooterDataSuccess(processedData, dataOf));
+      
+    }else{
+      if(wasteData.length != 0){
+        const processedData = processInfoEditFooterData([], wasteData, {}, {}, dataOf);
+        dispatch(loadInfoEditFooterDataSuccess(processedData, dataOf));
+      }else{
+        const processedData = processInfoEditFooterData([], [], {}, {}, dataOf);
+        dispatch(loadInfoEditFooterDataSuccess({}, dataOf));
+      }
+    }
+  } catch (err) {
+    console.log("Load geo object work failed error: \n",err);
+    dispatch(loadGeoObjectsFailure("Server error: Load info edit footer data"));
   }
 }
 
-const thunkQueryChanged = (trackDataResult, formatedQuery) => {
-  return (dispatch) => {
-    dispatch(queryChanged(trackDataResult, formatedQuery));
-    return new Promise((resolve, reject) => resolve());
+const thunkChipsSelected = (type, query, id) => async(dispatch, getState) => {
+  dispatch(chipsSelected({ resultTrack:[] }, ""));
+  try {
+    let workData = [], workStatus = query;
+    if(type == "work status"){
+      const workRes = await loggedInClient.get(new WorkUrl().getAll("company", companyId), {params:{workStatus}});
+      workData = workRes.data;
+    }
+    const result = chipsFilter(type, query, workData, getState);
+    dispatch(chipsSelected(result, id));
+  } catch (err) {
+    console.log("Chips select failed error: \n",err);
+    dispatch(loadGeoObjectsFailure("Server error: Chips select"));
   }
 }
-const thunkToggleSearchBox = () => {
-  return(dispatch) => {
-    dispatch(toggleSearchBox());
-    return new Promise((resolve, reject) => resolve());
+
+const thunkPostGeoObjects = (newGeoObject, geoObjectType) => async(dispatch, getState) => {
+  dispatch(cancelNameModal());
+  if(geoObjectType == "track"){
+    dispatch(closeTrackPanel());
+  }else if(geoObjectType == "zone"){
+    dispatch(closeZonePanel());
+  }
+  try{
+    newGeoObject.companyId = companyId;
+    const geoObjectRes = await loggedInClient.post(new GeoObjectUrl().post(geoObjectType), newGeoObject);
+    if(geoObjectType == "track"){
+      const track =_.cloneDeep(getState().explore.track);
+      track.push(geoObjectRes.data);
+      dispatch(postGeoObjectsSuccess(track, geoObjectType));
+    }else if(geoObjectType == "zone"){
+      const zone = [geoObjectRes.data];
+      dispatch(postGeoObjectsSuccess(zone, geoObjectType));
+    }
+  }catch(err){
+    console.log("Post geo objects failed error:\n",err);
+    dispatch(postGeoObjectsFailure("Server error: Post geo objects"));
   }
 }
-//Exporting action creators
+
+const thunkQueryChanged = (trackDataResult, formattedQuery) => (dispatch) => {
+  dispatch(queryChanged(trackDataResult, formattedQuery));
+  return new Promise((resolve, reject) => resolve());
+}
+
+const thunkToggleSearchBox = () => (dispatch) => {
+  dispatch(toggleSearchBox());
+  return new Promise((resolve, reject) => resolve());
+}
+
+/**
+ * Exporting action creators
+ * */
 export const actions = {
   locationGranted, locationDenied,
   changeRegion, markerSelected, trackSelected, zoneSelected, chipsSelected, thunkChipsSelected, dismissSelectedGeoObject, 
   loadGeoObjects, loadGeoObjectsSuccess, loadGeoObjectsFailure, thunkLoadGeoObjects,
-  loadGeoObjectsWork, loadGeoObjectsWorkSuccess,loadGeoObjectsWorkFailure, thunkLoadGeoObjectWork,
-  loadGeoObjectsWaste, loadGeoObjectsWasteSuccess, loadGeoObjectsWasteFailure, thunkLoadGeoObjectWaste,
+  loadInfoEditFooterData, loadInfoEditFooterDataSuccess, loadInfoEditFooterDataFailure, thunkLoadInfoEditFooterData,
   togglePanel, toggleNameModal, cancelNameModal, nameModalChanged,
-  addZonePoint, deleteZonePoint, dragZoneMarker, doneZonePanel, cancelZonePanel,
-  addTrackPoint, deleteTrackPoint, dragTrackMarker, doneTrackPanel1, cancelTrackPanel1,
+  postGeoObjects, postGeoObjectsSuccess, postGeoObjectsFailure, thunkPostGeoObjects,
+  addZonePoint, deleteZonePoint, dragZoneMarker, closeZonePanel,
+  addTrackPoint, deleteTrackPoint, dragTrackMarker, closeTrackPanel,
   toggleSearchBox, thunkToggleSearchBox, queryChanged, thunkQueryChanged
 }
