@@ -5,7 +5,8 @@ import _ from 'lodash';
 import LinearGradient from 'react-native-linear-gradient'
 import shadow from 'lib/res/shadow'
 import colors from 'lib/res/colors'
-import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+import AntIcon from 'react-native-vector-icons/AntDesign'
+import {Button} from 'components/button'
 
 const ListItem = ({onPressItem, icon, distance, title, desc}) => {
   return(
@@ -42,55 +43,43 @@ export const BottomSheetList = ({data}) => {
   )
 }
 
-const StatusChips = ({status}) => {
+const StatusChips = ({status, chipsTitle}) => {
   return(
-    <View style={[styles.chipsItem, getBGColor(status)]}>
-      <Text style={styles.chipsText}>{status}</Text>
+    <View style={styles.chipsContainerItem}>
+      <Text style={styles.chipsTitle}>{chipsTitle}</Text>
+      <View style={[styles.chipsItem, getBGColor(status)]}>
+        <Text style={styles.chipsText}>{status}</Text>
+      </View>
     </View>
   )
 }
 
-const Header = ({title, workStatus, wasteCondition, staffGroupName, vehiclePlateNo, onPressSeeDetail}) => {
-  if(_.isEmpty(workStatus)){
-    workStatus = "no work";
-  }
-  if(_.isEmpty(wasteCondition)){
-    wasteCondition = "no waste";
-  }
-  if(_.isEmpty(staffGroupName)){
-    staffGroupName = "no staff group";
-  }
-  if(_.isEmpty(vehiclePlateNo)){
-    vehiclePlateNo = "no vehicle";
-  }
-
+const Header = ({title, onPressDismiss}) => {
   return(
-    <View style = {styles.infoHeader}>
-      <View style={styles.headerTitleContainer}>
-        <Text style={styles.headerTitle}>{title.length > 30 ? `${title.slice(0,27)}...` : title}</Text>
-        <TouchableOpacity onPress = {onPressSeeDetail}>
-          <Text style={styles.headerSecondaryTitle}>See Detail</Text>
-        </TouchableOpacity>
+    <View style={styles.headerTitleContainer}>
+      <Text style={styles.headerTitle}>{title.length > 35 ? `${title.slice(0,30).toUpperCase()}...` : title.toUpperCase()}</Text>
+      <View style={styles.headerSecondaryTitle}>
+        <Button buttonType="iconOnly" icon={<AntIcon name="closecircle" color="rgb(201, 201, 201)" size={20}/>}
+          onPress={onPressDismiss}/>
+      </View>
+    </View>
+  )
+}
+
+const SummaryInfo = ({workStatus, wasteCondition, staffGroupName, vehiclePlateNo}) => {
+  if(_.isEmpty(workStatus)){ workStatus = "no work"; }
+  if(_.isEmpty(wasteCondition)){ wasteCondition = "no waste"; }
+  if(_.isEmpty(staffGroupName)){ staffGroupName = "no staff group"; }
+  if(_.isEmpty(vehiclePlateNo)){ vehiclePlateNo = "no vehicle"; }
+  return(
+    <View style={styles.summaryInfoContainer}>
+      <View style={styles.chipsContainer}>
+        <StatusChips status = {workStatus} chipsTitle={"Work"}/>
+        <StatusChips status = {wasteCondition} chipsTitle={"Waste"}/>
       </View>
       <View style={styles.chipsContainer}>
-        <View style={styles.chipsContainerItem}>
-          <Text style={styles.chipsTitle}>Work</Text>
-          <StatusChips status = {workStatus}/>
-        </View>
-        <View style={styles.chipsContainerItem}>
-          <Text style={styles.chipsTitle}>Waste</Text>
-          <StatusChips status = {wasteCondition}/>
-        </View>
-      </View>
-      <View style={styles.chipsContainer}>
-        <View style={styles.chipsContainerItem}>
-          <Text style={styles.chipsTitle}>Staff Group</Text>
-          <StatusChips status = {staffGroupName}/>
-        </View>
-        <View style={styles.chipsContainerItem}>
-          <Text style={styles.chipsTitle}>Vehicle</Text>
-          <StatusChips status = {vehiclePlateNo}/>
-        </View>
+          <StatusChips status = {staffGroupName} chipsTitle={"Staff group"}/>
+          <StatusChips status = {vehiclePlateNo} chipsTitle={"Vehicle"}/>
       </View>
     </View>
   )
@@ -100,13 +89,13 @@ const WasteCategoryItem = ({amount, category}) => {
   return(
     <View style={styles.wasteCategoryItemContainer}>
       <View>
-        <Text style={{fontFamily:"Roboto",fontSize:20, textAlign:"center"}}>
+        <Text style={styles.wasteCategoryItemText}>
           {amount}
         </Text>
       </View>
       <Divider/>
       <View>
-        <Text style={{fontFamily:"Roboto",fontSize:14, textAlign:"center"}}>
+        <Text style={styles.wasteCategoryItemText}>
           {category}
         </Text>
       </View>
@@ -120,35 +109,66 @@ const Divider = () => {
   )
 }
 
-export const BottomSheetInfo = ({title, workStatus, wasteCondition,  staffGroupName, vehiclePlateNo, wasteData}) => {
+const WasteSummaryInfo = ({wasteData}) => {
+  return(
+    <View style={styles.wasteSummaryInfoContainer}>
+      <View>
+        <Text style={styles.wasteCategoryItemTitle}>Waste amount by category</Text>
+      </View>
+      <ScrollView
+        horizontal scrollEventThrottle={1}
+        showsHorizontalScrollIndicator={false} height={100}
+        style={styles.wasteCategoryScrollView}
+        contentContainerStyle={{
+          paddingRight: 20
+        }}
+      >
+        {_.isEmpty(wasteData)? (<View><Text>No Waste Data</Text></View>)
+          : Object.entries(wasteData).map(([key, value])=>{
+          return(<WasteCategoryItem key={key} category={key} amount={value}/>)
+        })}
+      </ScrollView>
+    </View>
+  )
+}
+
+const EditCard = ({onPressEditMap, onPressEditDetails, onPressDelete}) => {
+  return(
+    <View style={styles.EditCardContainer}>
+      <View style={styles.EditCardItemContainer}>
+        <Button disabled={false} onPress={onPressEditMap} buttonType="outline" text="Edit Map" style={styles.EditCardItem}/>
+        <Button disabled={false} onPress={onPressEditDetails} buttonType="outline" text="Edit Detail" style={styles.EditCardItem}/>
+        <Button disabled={false} onPress={onPressDelete} buttonType="outline" text="Delete" 
+        style={[styles.EditCardItem, {borderColor:"red"}]} buttonContainStyle={{color:"red"}}/>
+      </View>
+    </View>
+  )
+}
+
+export const BottomSheetInfo = ({
+  title, 
+  workStatus, 
+  wasteCondition,  
+  staffGroupName, 
+  vehiclePlateNo, 
+  wasteData, 
+  onPressDismiss,
+  onPressEditMap,
+  onPressEditDetails,
+  onPressDelete,
+}) => {
   return (
-    <View style = {styles.infoEdit}>
+    <View style = {styles.infoEditBottomBackground}>
       <LinearGradient colors={["rgba(236, 233, 230, 1)","rgba(242, 242, 242, 1)"]} style = {styles.infoEditContainer}>
         <ScrollView
           scrollEventThrottle={1}
           showsVerticalScrollIndicator={true}
           style={styles.infoEditContainerScrollView}
         >
-          <Header title = {title} workStatus={workStatus}  wasteCondition={wasteCondition} staffGroupName={staffGroupName} vehiclePlateNo={vehiclePlateNo}/>
-
-          <Divider/>
-
-          <View>
-            <Text style={styles.wasteCategoryItemTitle}>Waste amount by category</Text>
-          </View>
-          <ScrollView
-            horizontal scrollEventThrottle={1}
-            showsHorizontalScrollIndicator={false} height={100}
-            style={styles.wasteCategoryScrollView}
-            contentContainerStyle={{
-              paddingRight: 20
-            }}
-          >
-            {_.isEmpty(wasteData)? (<View><Text>No Waste Data</Text></View>)
-              : Object.entries(wasteData).map(([key, value])=>{
-              return(<WasteCategoryItem key={key} category={key} amount={value}/>)
-            })}
-          </ScrollView>
+          <Header title = {title} onPressDismiss={onPressDismiss}/>
+          <SummaryInfo workStatus={workStatus}  wasteCondition={wasteCondition} staffGroupName={staffGroupName} vehiclePlateNo={vehiclePlateNo}/>
+          <WasteSummaryInfo wasteData={wasteData}/>
+          <EditCard onPressEditMap={onPressEditMap} onPressEditDetails={onPressEditDetails} onPressDelete={onPressDelete}/>
         </ScrollView>
       </LinearGradient>
     </View>
@@ -196,13 +216,11 @@ const styles = StyleSheet.create({
     marginVertical:15,
     ...shadow.DP1
   },
+
   //Info and edit bottomsheet
-  infoEdit:{
+  infoEditBottomBackground:{
     flex:1,
-    justifyContent:"flex-end"
-  },
-  infoEditContainerScrollView:{
-    flex:1,
+    justifyContent:"flex-end",
   },
   infoEditContainer:{
     backgroundColor:"rgba(249, 250, 251, 1)",
@@ -212,26 +230,30 @@ const styles = StyleSheet.create({
     borderTopRightRadius:10,
     ...shadow.DP24
   },
-  //Info Header
-  infoHeader:{
-    margin:10,
+  infoEditContainerScrollView:{
+    flex:1,
   },
+
+  //Info Header
   headerTitleContainer:{
+    padding:10,
+    paddingTop:15,
+    marginBottom:10,
+    borderTopLeftRadius:10,
+    borderTopRightRadius:10,
     flexDirection:"row",
-    marginBottom:5
+    backgroundColor:"rgba(255,255,255,1)"
   },
   headerTitle:{
-    flex:3,
+    flex:4,
     fontFamily:"Roboto",
     fontWeight:"bold",
-    fontSize:20,
+    fontSize:16,
   },
   headerSecondaryTitle:{
     flex:1,
-    fontFamily:"Roboto",
-    fontWeight:"normal",
-    fontSize:15,
-    color:`${colors.primaryButton}`
+    alignItems:"flex-end", 
+    paddingRight:5
   },
   chipsContainer:{
     flexDirection:"row",
@@ -245,27 +267,41 @@ const styles = StyleSheet.create({
     fontWeight:"bold",
     fontSize:14, 
   },
+
+  //Summary info
+  summaryInfoContainer:{
+    padding:10,
+    backgroundColor:"rgba(255,255,255,1)",
+    marginBottom:10,
+  },
+
   //Chips
   chipsIcon: {
     marginRight: 5,
   },
   chipsItem: {
-    flexDirection:"row",
+    //flexDirection:"row",
     borderRadius:20,
     padding:5,
     paddingHorizontal:10, 
     marginHorizontal:10,
-    height:30,
-    width:"70%",
+    height:25,
+    width:"65%",
     ...shadow.DP1
   },
   chipsText: {
     fontFamily:"Roboto", 
-    fontSize:12, 
+    fontSize:10, 
     fontWeight:"bold", 
     color:"#fff"
   },
+
   //Waste Category
+  wasteSummaryInfoContainer:{
+    padding:10,
+    marginBottom:10,
+    backgroundColor:"rgba(255, 255, 255, 1)"
+  },  
   wasteCategoryItemTitle: {
     margin:10,
     fontFamily:"Roboto",
@@ -277,11 +313,35 @@ const styles = StyleSheet.create({
     margin:10,
   },
   wasteCategoryItemContainer: {
-    backgroundColor:"rgba(249, 250, 251, 1)", 
-    borderRadius:5, 
+    //backgroundColor:"rgba(95, 120, 199, 1)",
+    borderWidth:2,
+    borderRadius:5,
+    borderColor:"rgba(95, 120, 199, 1)",
     paddingHorizontal:10, 
     marginHorizontal:5, 
     height:60, 
-    ...shadow.DP1
+    //...shadow.DP1
+  },
+  wasteCategoryItemText:{
+    fontFamily:"Roboto",
+    fontSize:15, 
+    textAlign:"center", 
+    color:"rgba(95, 120, 199, 1)",
+  },
+  //Edit Card
+  EditCardContainer:{
+    backgroundColor:"rgba(255, 255, 255, 1)"
+  },
+  EditCardItemContainer:{
+    flexDirection:"row",
+    margin:10,
+  },
+  EditCardItem:{
+    marginHorizontal:10,
+  },
+  EditCardItemText:{
+    fontFamily:"Roboto",
+    fontSize:16,
+    color:"rgba(95, 120, 199, 1)"
   }
 });

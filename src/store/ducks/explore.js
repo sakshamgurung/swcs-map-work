@@ -16,15 +16,23 @@ export const types = {
   CHIPS_SELECTED:"explore/chipsSelected",
 
   SEARCH_CHANGED:"explore/searchChanged",
-  NAME_MODAL_CHANGED:"explore/nameModalChanged",
-  TOGGLE_NAME_MODAL:"explore/toggleNameModal",
-  
+  TOGGLE_GEO_OBJECTS_DETAIL_MODAL:"explore/toggleGeoObjectsDetailModal",
+  Geo_OBJECTS_DETAIL_CHANGED:"explore/geoObjectsDetailChanged",
+
   TOGGLE_SEARCH_BOX:"explore/toggleSearchBox",
   QUERY_CHANGED:"explore/trackQueryChanged",
 
   POST_GEO_OBJECTS:"explore/postGeoObjects",
   POST_GEO_OBJECTS_SUCCESS:"explore/postGeoObjectsSuccess",
   POST_GEO_OBJECTS_FAILURE:"explore/postGeoObjectsFailure",
+  
+  PUT_GEO_OBJECTS:"explore/putGeoObjects",
+  PUT_GEO_OBJECTS_SUCCESS:"explore/putGeoObjectsSuccess",
+  PUT_GEO_OBJECTS_FAILURE:"explore/putGeoObjectsFailure",
+  
+  DELETE_GEO_OBJECTS:"explore/deleteGeoObjects",
+  DELETE_GEO_OBJECTS_SUCCESS:"explore/deleteGeoObjectsSuccess",
+  DELETE_GEO_OBJECTS_FAILURE:"explore/deleteGeoObjectsFailure",
 
   LOAD_GEO_OBJECTS:"explore/loadGeoObjects",
   LOAD_GEO_OBJECTS_SUCCESS:"explore/loadGeoObjectsSuccess",
@@ -35,15 +43,18 @@ export const types = {
   LOAD_INFO_EDIT_FOOTER_DATA_FAILURE:"explore/loadInfoEditFooterDataFailure",
   
   SHOW_DEFAULT_PANEL:"explore/showDefalutPanel",
-  SHOW_TRACK_PANEL:"explore/showTrackPanel",
-  SHOW_ZONE_PANEL:"explore/showZonePanel",
   
+  SHOW_TRACK_PANEL:"explore/showTrackPanel",
   CLOSE_TRACK_PANEL:"explore/CloseTrackPanel",
-
+  
+  SHOW_ZONE_PANEL:"explore/showZonePanel",
   CLOSE_ZONE_PANEL:"explore/closeZonePanel",
+  
+  SHOW_GEO_OBJECT_EDIT_PANEL:"explore/showGeoObjectEditPanel",
+  CLOSE_GEO_OBJECT_EDIT_PANEL:"explore/closeGeoObjectEditPanel",
 
   TOGGLE_MAP_SEARCH:"explore/toggleMapSearch",
-  CANCEL_NAME_MODAL:"explore/cancelNameModal",
+  CANCEL_GEO_OBJECTS_DETAIL_MODAL:"explore/cancelGeoObjectsDetailModal",
 
   ADD_ZONE_POINT:"explore/addZonePoint",
   DELETE_ZONE_POINT:"explore/deleteZonePoint",
@@ -87,8 +98,9 @@ export const initialState = {
   showDefaultPanel:true,
   showZonePanel:false,
   showTrackPanel:false,
-  nameModalVisible:false,
-  nameModalValue:"",
+  showGeoObjectEditPanel:false,
+  geoObjectsDetailModalVisible:false,
+  geoObjectsDetail:{name:"", wasteLimit:"500", wasteLimitUnit:"kg", description:""},
   zone:[],
   zonePoints:[],
   track:[],
@@ -100,7 +112,7 @@ export const initialState = {
   selectedZoneIndex:-1,
   infoEditFooterData:{},
   selectedChipsId:"",
-  chipsFilteredTrack:{}
+  chipsFilteredTrack:{},
 }
 //Reducers
 export default function reducer(state = initialState, action){
@@ -146,8 +158,7 @@ export default function reducer(state = initialState, action){
 
     case types.DISMISS_SELECTED_GEO_OBJECT: {
       return {
-        ...state, selectedTrackIndex: -1, selectedZoneIndex: -1, chipsFilteredTrack: {},
-        selectedChipsId: ""
+        ...state, selectedTrackIndex: -1, selectedZoneIndex: -1, chipsFilteredTrack: {}, selectedChipsId: ""
       };
     }
 
@@ -174,7 +185,6 @@ export default function reducer(state = initialState, action){
 
     case types.LOAD_INFO_EDIT_FOOTER_DATA_SUCCESS: {
       const { response, dataOf } = action.payload;
-      console.log("response:\n",response);
       if (dataOf == "track") {
         return { ...state, infoEditFooterData: response };
       }
@@ -200,6 +210,25 @@ export default function reducer(state = initialState, action){
         ...state, showDefaultPanel: false, mapSearchVisible: false,
         selectedTrackIndex: -1, selectedZoneIndex: -1, showTrackPanel: true
       };
+    }
+
+    case types.SHOW_GEO_OBJECT_EDIT_PANEL:{
+      const {geoObjectType, selectedGeoObjectIndex} = action.payload;
+      
+      if(geoObjectType == "track"){
+        const trackPoints = _.cloneDeep(state.track[selectedGeoObjectIndex].trackPoints);
+        return {
+          ...state, showDefaultPanel:false, mapSearchVisible:false, showGeoObjectEditPanel:true, trackPoints
+        }
+      }
+    }
+    case types.CLOSE_GEO_OBJECT_EDIT_PANEL:{
+      const {geoObjectType} = action.payload;
+      if(geoObjectType == "track"){
+        return {
+          ...state, showDefaultPanel:true, mapSearchVisible:true, showGeoObjectEditPanel:false, currentMarkerId:"", trackPoints:[]
+        }
+      }
     }
 
     //new zone reducers
@@ -235,6 +264,7 @@ export default function reducer(state = initialState, action){
         ...state, trackPoints: [], currentMarkerId: "", showTrackPanel: false, showDefaultPanel: true, mapSearchVisible: true
       };
     }
+
     //posting new geoObjects
     case types.POST_GEO_OBJECTS_SUCCESS: {
       const {geoObjectType, response} = action.payload;
@@ -254,6 +284,47 @@ export default function reducer(state = initialState, action){
         ...state, errorInfo:action.payload
       };
     }
+    
+    //update geoObjects
+    case types.PUT_GEO_OBJECTS_SUCCESS:{
+      const {geoObjectType, response} = action.payload;
+      if(geoObjectType == "track"){
+        return {
+          ...state, track: response, queryTrack: response, fullQueryTrack: response
+        };
+      }else if(geoObjectType == "zone"){
+        return {
+          ...state, zone:response
+        }
+      }
+    }
+
+    case types.PUT_GEO_OBJECTS_FAILURE: {
+      return {
+        ...state, errorInfo:action.payload
+      };
+    }
+
+    //delete geoObjects
+    case types.DELETE_GEO_OBJECTS_SUCCESS:{
+      const {geoObjectType, response} = action.payload;
+      if(geoObjectType == "track"){
+        return {
+          ...state, track: response, queryTrack: response, fullQueryTrack: response
+        };
+      }else if(geoObjectType == "zone"){
+        return {
+          ...state, zone:response
+        }
+      }
+    }
+
+    case types.DELETE_GEO_OBJECTS_FAILURE: {
+      return {
+        ...state, errorInfo:action.payload
+      };
+    }
+
     //search box reducers
     case types.TOGGLE_SEARCH_BOX: {
       return {
@@ -268,14 +339,19 @@ export default function reducer(state = initialState, action){
     }
 
     //name modal reducers
-    case types.TOGGLE_NAME_MODAL: {
-      return { ...state, nameModalVisible: !state.nameModalVisible };
+    case types.TOGGLE_GEO_OBJECTS_DETAIL_MODAL: {
+      return { ...state, geoObjectsDetailModalVisible: !state.geoObjectsDetailModalVisible };
     }
-    case types.CANCEL_NAME_MODAL: {
-      return { ...state, nameModalValue: "", nameModalVisible: false }
+    case types.CANCEL_GEO_OBJECTS_DETAIL_MODAL: {
+      return { ...state, geoObjectsDetailModalVisible: false,   geoObjectsDetail:{name:"", wasteLimit:500, wasteLimitUnit:"kg", description:""} }
     }
-    case types.NAME_MODAL_CHANGED: {
-      return { ...state, nameModalValue: action.payload }
+
+    case types.Geo_OBJECTS_DETAIL_CHANGED: {
+      const {property, value} = action.payload;
+      const geoObjectsDetail = _.cloneDeep(state.geoObjectsDetail);
+      geoObjectsDetail[`${property}`] = value;
+      console.log("geoObjectsDetail:",geoObjectsDetail);
+      return {...state, geoObjectsDetail};
     }
 
     default: {
@@ -284,9 +360,10 @@ export default function reducer(state = initialState, action){
   }
 }
 
-//Action creator
+/**
+ * Action creator
+ * */
 
-//location request action creator
 const locationGranted = (position) => {
   console.log(position);
   return ({type:types.LOCATION_GRANTED, payload:position});
@@ -296,17 +373,14 @@ const locationDenied = (err) => {
   return ({type:types.LOCATION_DENIED, payload:err});
 }
 
-//region action creator
 const changeRegion = (region) => {
   return ({type:types.REGION_CHANGED, payload:region});
 }
 
-//marker action creator
 const markerSelected = (markerId) => {
   return ({type:types.MARKER_SELECTED, payload:markerId});
 }
 
-//geo object selected action creator
 const trackSelected = (selectedTrackIndex) => {
   return ({type:types.TRACK_SELECTED, payload:selectedTrackIndex});
 }
@@ -319,12 +393,12 @@ const chipsSelected = (chipsFilteredGeoObject, selectedChipsId) => {
   return ({type:types.CHIPS_SELECTED, payload:{chipsFilteredGeoObject, selectedChipsId}});
 }
 
-//DISMISS action creator
 const dismissSelectedGeoObject = () => {
   return ({type:types.DISMISS_SELECTED_GEO_OBJECT});
 }
-
-//GEO OBJECT data action creator
+/**
+ * API request and calls
+ */
 const loadGeoObjects = () => {
   return ({type:types.LOAD_GEO_OBJECTS});
 }
@@ -337,7 +411,6 @@ const loadGeoObjectsFailure = (err) => {
   return ({type:types.LOAD_GEO_OBJECTS_FAILURE, payload:err});
 }
 
-//WORK data action creator
 const loadInfoEditFooterData = () => {
   return ({type: types.LOAD_INFO_EDIT_FOOTER_DATA});
 }
@@ -350,9 +423,8 @@ const loadInfoEditFooterDataFailure = (err) => {
   return ({type: types.LOAD_INFO_EDIT_FOOTER_DATA_FAILURE, payload:err});
 }
 
-// Post geo objects
-const postGeoObjects = (p) => {
-  return ({type:types.POST_GEO_OBJECTS, payload:p})
+const postGeoObjects = () => {
+  return ({type:types.POST_GEO_OBJECTS});
 }
 
 const postGeoObjectsSuccess = (response, geoObjectType) => {
@@ -363,12 +435,42 @@ const postGeoObjectsFailure = (err) => {
   return ({type:types.POST_GEO_OBJECTS_FAILURE, payload:err});
 }
 
+const putGeoObjects = () => {
+  return ({type:types.PUT_GEO_OBJECTS});
+}
 
-const togglePanel = (panelType) => {
+const putGeoObjectsSuccess = (response, geoObjectType) => {
+  return ({type:types.PUT_GEO_OBJECTS_SUCCESS, payload:{response, geoObjectType}});
+}
+
+const putGeoObjectsFailure = (err) => {
+  return ({type:types.PUT_GEO_OBJECTS_FAILURE, payload:err});
+}
+
+const deleteGeoObjects = () => {
+  return ({type:types.DELETE_GEO_OBJECTS});
+}
+
+const deleteGeoObjectsSuccess = (response, geoObjectType) => {
+  return ({type:types.DELETE_GEO_OBJECTS_SUCCESS, payload:{response, geoObjectType}});
+}
+
+const deleteGeoObjectsFailure = (err) => {
+  return ({type:types.DELETE_GEO_OBJECTS_FAILURE, payload:err});
+}
+
+const showPanel = (panelType) => {
   return ({type:panelType});
 }
 
-//ZONE action creator
+const showGeoObjectEditPanel = (geoObjectType, selectedGeoObjectIndex) => {
+  return ({type:types.SHOW_GEO_OBJECT_EDIT_PANEL, payload:{geoObjectType, selectedGeoObjectIndex}});
+}
+
+const closeGeoObjectEditPanel = (geoObjectType) => {
+  return ({type:types.CLOSE_GEO_OBJECT_EDIT_PANEL, payload:{geoObjectType}})
+}
+
 const addZonePoint = (zonePoints) => {
   return ({type:types.ADD_ZONE_POINT, payload:zonePoints});
 }
@@ -384,7 +486,6 @@ const closeZonePanel = () => {
   return({type:types.CLOSE_ZONE_PANEL});
 }
 
-//TRACK action creator
 const addTrackPoint = (trackPoints) => {
   return ({type:types.ADD_TRACK_POINT, payload:trackPoints});
 }
@@ -402,8 +503,6 @@ const closeTrackPanel = () => {
   return({type:types.CLOSE_TRACK_PANEL});
 }
 
-
-//search box action creator
 const toggleSearchBox = () => {
   return ({type:types.TOGGLE_SEARCH_BOX});
 }
@@ -412,17 +511,16 @@ const queryChanged = (trackDataResult, formattedQuery) => {
   return ({type:types.QUERY_CHANGED, payload:{trackDataResult, formattedQuery}});
 }
 
-//name modal action creator
-const toggleNameModal = () => {
-  return ({type:types.TOGGLE_NAME_MODAL});
+const toggleGeoObjectsDetailModal = () => {
+  return ({type:types.TOGGLE_GEO_OBJECTS_DETAIL_MODAL});
 }
 
-const cancelNameModal = () => {
-  return ({type:types.CANCEL_NAME_MODAL});
+const cancelGeoObjectsDetailModal = () => {
+  return ({type:types.CANCEL_GEO_OBJECTS_DETAIL_MODAL});
 }
 
-const nameModalChanged = (geoObjectName) => {
-  return ({type:types.NAME_MODAL_CHANGED, payload:geoObjectName})
+const geoObjectsDetailChanged = (geoObjectsDetail) => {
+  return ({type:types.Geo_OBJECTS_DETAIL_CHANGED, payload:geoObjectsDetail})
 }
 
 /**
@@ -513,7 +611,7 @@ const thunkChipsSelected = (type, query, id) => async(dispatch, getState) => {
 }
 
 const thunkPostGeoObjects = (newGeoObject, geoObjectType) => async(dispatch, getState) => {
-  dispatch(cancelNameModal());
+  dispatch(cancelGeoObjectsDetailModal());
   if(geoObjectType == "track"){
     dispatch(closeTrackPanel());
   }else if(geoObjectType == "zone"){
@@ -526,6 +624,7 @@ const thunkPostGeoObjects = (newGeoObject, geoObjectType) => async(dispatch, get
       const track =_.cloneDeep(getState().explore.track);
       track.push(geoObjectRes.data);
       dispatch(postGeoObjectsSuccess(track, geoObjectType));
+
     }else if(geoObjectType == "zone"){
       const zone = [geoObjectRes.data];
       dispatch(postGeoObjectsSuccess(zone, geoObjectType));
@@ -533,6 +632,34 @@ const thunkPostGeoObjects = (newGeoObject, geoObjectType) => async(dispatch, get
   }catch(err){
     console.log("Post geo objects failed error:\n",err);
     dispatch(postGeoObjectsFailure("Server error: Post geo objects"));
+  }
+}
+
+const thunkPutGeoObjects = (updatedGeoObject, updatedGeoObjectIndex, updatedGeoObjectId , geoObjectType) => async(dispatch, getState) => {
+  try{
+    await loggedInClient.put(new GeoObjectUrl().put(geoObjectType, updatedGeoObjectId ), updatedGeoObject);
+    const track = getState().explore.track;
+    track[updatedGeoObjectIndex].trackPoints = updatedGeoObject.trackPoints;
+    dispatch(dismissSelectedGeoObject());
+    dispatch(closeGeoObjectEditPanel(geoObjectType));
+    dispatch(putGeoObjectsSuccess(track, geoObjectType));
+
+  }catch(err){
+    console.log("Put geo objects failed error:\n",err);
+    dispatch(putGeoObjectsFailure("Server error: Put geo objects"));
+  }
+}
+
+const thunkDeleteGeoObjects = (deletedGeoObjectIndex, deletedGeoObjectId , geoObjectType) => async(dispatch, getState) => {
+  try{
+    await loggedInClient.delete(new GeoObjectUrl().delete(geoObjectType, deletedGeoObjectId ));
+    const track = getState().explore.track;
+    track.splice(deletedGeoObjectIndex, 1);
+    dispatch(dismissSelectedGeoObject());
+    dispatch(deleteGeoObjectsSuccess(track, geoObjectType));
+  }catch(err){
+    console.log("Delete geo objects failed error:\n",err);
+    dispatch(deleteGeoObjectsFailure("Server error: Delete geo objects"));
   }
 }
 
@@ -554,8 +681,11 @@ export const actions = {
   changeRegion, markerSelected, trackSelected, zoneSelected, chipsSelected, thunkChipsSelected, dismissSelectedGeoObject, 
   loadGeoObjects, loadGeoObjectsSuccess, loadGeoObjectsFailure, thunkLoadGeoObjects,
   loadInfoEditFooterData, loadInfoEditFooterDataSuccess, loadInfoEditFooterDataFailure, thunkLoadInfoEditFooterData,
-  togglePanel, toggleNameModal, cancelNameModal, nameModalChanged,
+  showPanel, toggleGeoObjectsDetailModal, cancelGeoObjectsDetailModal, geoObjectsDetailChanged,
   postGeoObjects, postGeoObjectsSuccess, postGeoObjectsFailure, thunkPostGeoObjects,
+  putGeoObjects, putGeoObjectsSuccess, putGeoObjectsFailure, thunkPutGeoObjects,
+  deleteGeoObjects, deleteGeoObjectsSuccess, deleteGeoObjectsFailure, thunkDeleteGeoObjects,
+  showGeoObjectEditPanel, closeGeoObjectEditPanel,
   addZonePoint, deleteZonePoint, dragZoneMarker, closeZonePanel,
   addTrackPoint, deleteTrackPoint, dragTrackMarker, closeTrackPanel,
   toggleSearchBox, thunkToggleSearchBox, queryChanged, thunkQueryChanged

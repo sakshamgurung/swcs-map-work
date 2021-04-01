@@ -5,7 +5,7 @@ import React, { Component} from 'react';
 import {connect} from 'react-redux';
 //action creator
 import {actions as exploreActions, types as exploreActionTypes} from 'store/ducks/explore';
-import { Dimensions, StyleSheet, View, Text, PermissionsAndroid, Platform, 
+import { SafeAreaView, StatusBar, Dimensions, StyleSheet, View, Text, PermissionsAndroid, Platform, 
   Alert, TextInput, ScrollView} from 'react-native';
 /* Other dependencies */
 import MapView,{ PROVIDER_GOOGLE, Polygon, Polyline, AnimatedRegion, Marker, Callout } from 'react-native-maps';
@@ -19,7 +19,7 @@ import pointInPolygon from 'point-in-polygon';
 import _ from 'lodash';
 /** Components */
 import {FAB, Button, Chips} from 'components/button';
-import {CustomModal, SearchModal, BottomSheetInfo} from 'components/card';
+import {GeoObjectsDetailModal, SearchModal, BottomSheetInfo} from 'components/card';
 import {CheckpointMarker} from 'components/customMarker';
 import {MapEditPanel} from 'components/frame';
 import {DummySearchBox, MapSearch as ChipsFilterSearch} from 'components/input';
@@ -131,11 +131,11 @@ class ExploreMap extends Component {
 
   /** Button Handlers */
   //public class field syntax. Below event handler syntax ensures "this" is bind
-  _onPressDone(panelName){
+  _onPressDone(panelName, geoObjectType){
     if(panelName == "zone"){
       if(this.props.zonePoints.length >=3){
         const zonePoints = this.props.zonePoints;
-        const zoneName = this.props.nameModalValue;
+        const zoneName = this.props.geoObjectsDetail.name;
         const newZone = {zoneName, zonePoints};
         this.props.thunkPostGeoObjects(newZone, "zone");
       }else{
@@ -145,24 +145,36 @@ class ExploreMap extends Component {
     if(panelName == "track"){
       if(this.props.trackPoints.length >=2){
         const trackPoints = this.props.trackPoints;
-        const trackName = this.props.nameModalValue;
-        const newTrack = {trackName, trackPoints};
+        const trackName = this.props.geoObjectsDetail.name;
+        let {wasteLimit, wasteLimitUnit, description} = this.props.geoObjectsDetail;
+        wasteLimit = parseInt(_.isEmpty(wasteLimit)?"500":wasteLimit, 10);
+        const newTrack = {trackName, trackPoints, wasteLimit, wasteLimitUnit, description};
         this.props.thunkPostGeoObjects(newTrack, "track");
       }else{
         Alert.alert("Less than two points!","To create a track atleast two points are needed",[{text:"Ok"}]);
       }
     }
+    if(panelName == "geoObjectEdit"){
+      let updatedGeoObject = updatedGeoObjectIndex = updatedGeoObjectId = undefined;
+      if(geoObjectType == "track"){
+        const trackPoints = this.props.trackPoints;
+        updatedGeoObject = {trackPoints};
+        updatedGeoObjectIndex = this.props.selectedTrackIndex;
+        updatedGeoObjectId = this.props.track[updatedGeoObjectIndex]._id;
+      }
+      this.props.thunkPutGeoObjects(updatedGeoObject, updatedGeoObjectIndex, updatedGeoObjectId, geoObjectType);
+    }
   }
 
-  _onPressCancel(panelName){
+  _onPressCancel(panelName, geoObjectType){
     if(panelName == "zone"){
       if(this.props.zonePoints.length != 0){
         Alert.alert("Do you want to cancel?","Selecting Yes will delete your current progress",
           [
             {text: "No"},
             {text: "Yes", onPress: () => this.props.closeZonePanel()}
-          ]
-          ,{cancelable:true}
+          ],
+          {cancelable:true}
         );
       }else{
         this.props.closeZonePanel();
@@ -174,26 +186,35 @@ class ExploreMap extends Component {
           [ 
             {text: "No"},
             {text: "Yes", onPress: () => this.props.closeTrackPanel() }
-          ]
-          ,{cancelable:true}
+          ],
+          {cancelable:true}
         );
       }else{
         this.props.closeTrackPanel();
       }
     }
-  }  
+    if(panelName == "geoObjectEdit"){
+      Alert.alert("Do you want to cancel?","Selecting Yes will discard your current progress",
+        [
+          {text: "No"},
+          {text: "Yes", onPress:() => this.props.closeGeoObjectEditPanel(geoObjectType) }
+        ],
+        {cancelable:true}
+      );
+    }
+  }
 
   _onPressMoveTo(from, to){
     if(from == "zone" && to == "nameModal"){
       if(this.props.zonePoints.length >= 3 ){
-        this.props.toggleNameModal();
+        this.props.toggleGeoObjectsDetailModal();
       }else{
         Alert.alert("Less than three points!","To create a region atleast three points are needed",[{text:"Ok"}]);
       }
     }
     if(from == "track" && to == "nameModal"){
       if(this.props.trackPoints.length >= 2 ){
-        this.props.toggleNameModal();
+        this.props.toggleGeoObjectsDetailModal();
       }else{
         Alert.alert("Less than two points!","To create a track atleast two points are needed",[{text:"Ok"}]);
       }
@@ -242,12 +263,12 @@ class ExploreMap extends Component {
   /**
    * Zone panel and button handlers
    */
-  _toggleZonePanel = () => {
+  _showZonePanel = () => {
     if(this.props.zone.length >= 1){
       Alert.alert("One company can have max one zone.","",[],{cancelable:true});
       return;
     }
-    this.props.togglePanel(exploreActionTypes.SHOW_ZONE_PANEL);
+    this.props.showPanel(exploreActionTypes.SHOW_ZONE_PANEL);
   }
 
   _onPressAddZonePoint = () => {
@@ -344,8 +365,8 @@ class ExploreMap extends Component {
   /**
    * Track panel and button handlers
    * */ 
-  _toggleTrackPanel = () => {
-    this.props.togglePanel(exploreActionTypes.SHOW_TRACK_PANEL);
+  _showTrackPanel = () => {
+    this.props.showPanel(exploreActionTypes.SHOW_TRACK_PANEL);
   }
 
   _onPressAddTrackPoint = () => {
@@ -389,15 +410,15 @@ class ExploreMap extends Component {
   }
 
   _renderNewTrack(){
-    if(this.props.showTrackPanel){
+    if(this.props.showTrackPanel || this.props.showGeoObjectEditPanel){
       return(
-        <Polyline coordinates={this.props.trackPoints} strokeColor="rgba(242, 180, 65, 0.80)" strokeWidth={5}/>
+        <Polyline coordinates={this.props.trackPoints} strokeColor="rgba(12, 168, 80, 0.80)" strokeWidth={5}/>
       )
     }
   }
 
   _renderNewTrackMarkers(){
-    if(this.props.showTrackPanel && this.props.trackPoints.length >=1){
+    if((this.props.showTrackPanel || this.props.showGeoObjectEditPanel) && this.props.trackPoints.length >=1){
       return(
         this.props.trackPoints.map((m) => (
           <Marker
@@ -538,15 +559,33 @@ class ExploreMap extends Component {
     }
   }
 
+ _showGeoObjectEditPanel = (geoObjectType, selectedGeoObjectIndex)=>{
+    this.props.showGeoObjectEditPanel(geoObjectType, selectedGeoObjectIndex);
+ }
+
+ _showDeleteModal = (geoObjectType, selectedGeoObjectIndex, geoObjectId, geoObjectName) => {
+  Alert.alert(`Do you really want to delete ${geoObjectName}?`,"Selecting Yes will permanently delete all related information.",
+    [
+      {text: "No"},
+      {text: "Yes", onPress: () => this.props.thunkDeleteGeoObjects(selectedGeoObjectIndex, geoObjectId, geoObjectType)}
+    ],
+    {cancelable:true}
+  );
+ }
+
   _renderInfoEditFooter(){
     const {showDefaultPanel, selectedTrackIndex, selectedZoneIndex, infoEditFooterData} = this.props;
     if(showDefaultPanel && selectedTrackIndex >=0 ){
       const {totalWasteSummary, plateNo, groupName} = infoEditFooterData;
-      const {trackName, wasteCondition, workId} = this.props.track[selectedTrackIndex];
+      const {_id, trackName, wasteCondition, workId} = this.props.track[selectedTrackIndex];
       
       return(
         <BottomSheetInfo title={trackName} wasteCondition={wasteCondition} workStatus={workId} staffGroupName={groupName}
-        vehiclePlateNo={plateNo}  wasteData={totalWasteSummary}/>
+        vehiclePlateNo={plateNo}  wasteData={totalWasteSummary} 
+        onPressDismiss={this._onMapPress} 
+        onPressEditMap={() => this._showGeoObjectEditPanel("track", selectedTrackIndex)}
+        onPressDelete={() => this._showDeleteModal("track", selectedTrackIndex, _id, trackName)}
+        />
       )
     }else if(showDefaultPanel && selectedZoneIndex >=0){
       //for zone infoEdit bottomsheet
@@ -557,33 +596,28 @@ class ExploreMap extends Component {
     }
   }
 
-  nameModalObject(modalFor = ""){
-    if(this.props.nameModalVisible && modalFor!=""){
+  _renderGeoObjectDetailModal(modalFor = ""){
+    if(this.props.geoObjectsDetailModalVisible && modalFor!=""){
       let title = "";
       if(modalFor == "track"){
-        title = "Track Name";
+        title = "Track Detail";
       }else if(modalFor == "zone"){
-        title = "Zone Name";
+        title = "Zone Detail";
       }
       return(
-        <CustomModal 
-          visible = {this.props.nameModalVisible}
-          //toggleNameModal
-          onRequestClose = {() => this.props.toggleNameModal()}
-          onPressTouchableOpacity = {() => this.props.toggleNameModal()}
-          title = {title}
-          content = {
-            <TextInput
-              autoCorrect = {false}
-              keyboardType = "visible-password" underlineColorAndroid = "transparent"
-              style={{height:50, borderBottomWidth:1,
-                borderRadius:4, borderColor:colors.button, width:"80%", textAlignVertical:"bottom",fontSize:15}}
-              onChangeText={text => this.props.nameModalChanged(text)}
-              value = {this.props.nameModalValue} placeholder = {title}
-            />
-          }
-          footerContent1 = {<Button text="Cancel" buttonType="contained" onPress={() => this.props.cancelNameModal()}/>}
-          footerContent2 = {<Button text="Done" buttonType="contained" onPress={()=>this._onPressDone(modalFor)}/>}
+        <GeoObjectsDetailModal 
+          visible = {this.props.geoObjectsDetailModalVisible}
+          //toggleGeoObjectsDetailModal
+          onRequestClose = {() => this.props.toggleGeoObjectsDetailModal()}
+          onPressTouchableOpacity = {() => this.props.toggleGeoObjectsDetailModal()}
+          title = {title} 
+          onCancel={()=>this.props.cancelGeoObjectsDetailModal()}
+          onDone={()=>this._onPressDone(modalFor)}
+          onChangeGeoObjectsDetail={ this.props.geoObjectsDetailChanged}
+          geoObjectsName={this.props.geoObjectsDetail.name}
+          wasteLimit={this.props.geoObjectsDetail.wasteLimit}
+          wasteLimitUnit={this.props.geoObjectsDetail.wasteLimitUnit}
+          description={this.props.geoObjectsDetail.description}
         />
       )
     }
@@ -594,41 +628,59 @@ class ExploreMap extends Component {
       return(
         <View style={styles.defaultPanelStyle}>
           <FAB 
-            option1 = {<Button text="Add zone" buttonType="contained" onPress={this._toggleZonePanel}/>}
+            option1 = {<Button text="Add zone" buttonType="contained" onPress={this._showZonePanel}/>}
             option1Icon = {<MaterialIcon name="vector-polygon" size={24} color="rgba(255, 255, 255, 1)" style={{padding:6}}/>}
-            option2 = {<Button text="Add track" buttonType="contained" onPress={this._toggleTrackPanel}/>}
+            option2 = {<Button text="Add track" buttonType="contained" onPress={this._showTrackPanel}/>}
             option2Icon = {<MaterialIcon name="vector-polyline" size={24} color="rgba(255, 255, 255, 1)" style={{padding:6}}/>}
           />
         </View>
       )
     }
-    if(this.props.showZonePanel){
+
+    if(this.props.showTrackPanel || this.props.showZonePanel){
+      let headerTitle, cancel, moveFrom, moveTo, addBtnTitle, addBtnHandler, modalFor;
+      
+      if(this.props.showTrackPanel){
+        headerTitle = "Create Track";
+        cancel = moveFrom = modalFor = "track";
+        moveTo = "nameModal";
+        addBtnTitle = "Add track point";
+        addBtnHandler = this._onPressAddTrackPoint;
+      
+      }else if(this.props.showZonePanel){
+        headerTitle = "Create Zone";
+        cancel = moveFrom = modalFor = "zone";
+        moveTo = "nameModal";
+        addBtnTitle = "Add zone point";
+        addBtnHandler = this._onPressAddZonePoint;
+      }
       return(
-        <MapEditPanel
-          headerTitle = "Create Zone"
+        <MapEditPanel 
+          headerTitle = {headerTitle}
           headerLeft = {<Button buttonType="iconOnly" icon={<MaterialIcon name="close" color="#000" size={25}/>}
-            onPress={() => this._onPressCancel("zone")}/>
-          }
+              onPress={() => this._onPressCancel(cancel)}
+            />}
           headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-right" color="#000" size={25}/>}
-            onPress={() => this._onPressMoveTo("zone", "nameModal")}/>
-          }
-          footer = {<Button text="Add zone point" buttonType="contained" onPress={this._onPressAddZonePoint}/>}
-          modal = {this.nameModalObject("zone")}
+              onPress={() => this._onPressMoveTo(moveFrom, moveTo)}
+            />}
+          footer = {<Button text={addBtnTitle} buttonType="contained" onPress={addBtnHandler}/>}
+          modal = {this._renderGeoObjectDetailModal(modalFor)}
         />
       )
     }
-    if(this.props.showTrackPanel){
+    
+    if(this.props.showGeoObjectEditPanel){
       return(
-        <MapEditPanel 
-          headerTitle = "Create Track"
+        <MapEditPanel
+          headerTitle = "Edit Map"
           headerLeft = {<Button buttonType="iconOnly" icon={<MaterialIcon name="close" color="#000" size={25}/>}
-              onPress={() => this._onPressCancel("track")}
+              onPress={() => this._onPressCancel("geoObjectEdit", "track")}
             />}
-          headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="arrow-right" color="#000" size={25}/>}
-              onPress={() => this._onPressMoveTo("track", "nameModal")}
+          headerRight = {<Button buttonType="iconOnly" icon={<MaterialIcon name="check" color="#000" size={25}/>}
+              onPress={() => this._onPressDone("geoObjectEdit", "track")}
             />}
           footer = {<Button text="Add track point" buttonType="contained" onPress={()=>this._onPressAddTrackPoint()}/>}
-          modal = {this.nameModalObject("track")}
+          modal = {this._renderGeoObjectDetailModal("track")}
         />
       )
     }
@@ -637,7 +689,11 @@ class ExploreMap extends Component {
   /* Main renderers */
   render() {
     return (
-      <View style={ styles.container}>
+      <SafeAreaView style={ styles.container}>
+        <StatusBar
+          backgroundColor="rgba(62, 115, 222, 1)"
+          barStyle="default"
+        />
         <MapView.Animated
           //ref = {this._mapViewRef}
           customMapStyle = {mapStyle.style2}
@@ -658,7 +714,6 @@ class ExploreMap extends Component {
             {/* on default panel */}
             {this._renderTrack()}
             {this._renderSelectedTrackMarker()}
-
             {this._renderZone()}
             {this._renderSelectedZoneMarker()}
 
@@ -671,7 +726,7 @@ class ExploreMap extends Component {
         <MaterialIcon name="crosshairs" color="#000" size={15} style={styles.crosshairIcon}/>
         {this._renderPanel()}
         {this._renderInfoEditFooter()}
-      </View>
+      </SafeAreaView>
     );
   }
 }
